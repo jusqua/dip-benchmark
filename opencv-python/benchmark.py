@@ -42,18 +42,24 @@ def perform_benchmark(image: MatLike, filename: str, dir: str, rounds: int):
     sample = image.copy()
 
     star_mask = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=np.uint8)
-    blur_3x3_mask = np.array([
-        [1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0],
-        [2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0],
-        [1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0],
-    ], dtype=np.float32)
-    blur_5x5_mask = np.array([
-        [1.0 / 256.0, 4.0 / 256.0, 6.0 / 256.0, 4.0 / 256.0, 1.0 / 256.0],
-        [4.0 / 256.0, 16.0 / 256.0, 24.0 / 256.0, 16.0 / 256.0, 4.0 / 256.0],
-        [6.0 / 256.0, 24.0 / 256.0, 36.0 / 256.0, 24.0 / 256.0, 6.0 / 256.0],
-        [4.0 / 256.0, 16.0 / 256.0, 24.0 / 256.0, 16.0 / 256.0, 4.0 / 256.0],
-        [1.0 / 256.0, 4.0 / 256.0, 6.0 / 256.0, 4.0 / 256.0, 1.0 / 256.0],
-    ], dtype=np.float32)
+    blur_3x3_mask = np.array(
+        [
+            [1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0],
+            [2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0],
+            [1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0],
+        ],
+        dtype=np.float32,
+    )
+    blur_5x5_mask = np.array(
+        [
+            [1.0 / 256.0, 4.0 / 256.0, 6.0 / 256.0, 4.0 / 256.0, 1.0 / 256.0],
+            [4.0 / 256.0, 16.0 / 256.0, 24.0 / 256.0, 16.0 / 256.0, 4.0 / 256.0],
+            [6.0 / 256.0, 24.0 / 256.0, 36.0 / 256.0, 24.0 / 256.0, 6.0 / 256.0],
+            [4.0 / 256.0, 16.0 / 256.0, 24.0 / 256.0, 16.0 / 256.0, 4.0 / 256.0],
+            [1.0 / 256.0, 4.0 / 256.0, 6.0 / 256.0, 4.0 / 256.0, 1.0 / 256.0],
+        ],
+        dtype=np.float32,
+    )
 
     once, times = measure_time(lambda: cv.copyTo(image, sample), rounds)
     print("copy:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
@@ -63,11 +69,18 @@ def perform_benchmark(image: MatLike, filename: str, dir: str, rounds: int):
     print("inversion:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
     cv.imwrite(os.path.join(dir, f"inversion-{filename}"), sample)
 
-    once, times = measure_time(lambda: cv.cvtColor(cv.cvtColor(image, cv.COLOR_BGR2GRAY), cv.COLOR_GRAY2BGR, sample), rounds)
+    once, times = measure_time(
+        lambda: cv.cvtColor(
+            cv.cvtColor(image, cv.COLOR_BGR2GRAY), cv.COLOR_GRAY2BGR, sample
+        ),
+        rounds,
+    )
     print("grayscale:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
     cv.imwrite(os.path.join(dir, f"grayscale-{filename}"), sample)
 
-    once, times = measure_time(lambda: cv.threshold(image, 127, 255, cv.THRESH_BINARY, sample), rounds)
+    once, times = measure_time(
+        lambda: cv.threshold(image, 127, 255, cv.THRESH_BINARY, sample), rounds
+    )
     print("threshold:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
     cv.imwrite(os.path.join(dir, f"threshold-{filename}"), sample)
 
@@ -79,16 +92,37 @@ def perform_benchmark(image: MatLike, filename: str, dir: str, rounds: int):
     print("dilate:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
     cv.imwrite(os.path.join(dir, f"dilate-{filename}"), sample)
 
-    once, times = measure_time(lambda: cv.filter2D(image, -1, blur_3x3_mask, sample), rounds)
-    print("convolution-blur-3x3:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
+    once, times = measure_time(
+        lambda: cv.filter2D(image, -1, blur_3x3_mask, sample), rounds
+    )
+    print(
+        "convolution-blur-3x3:",
+        f"{once:.3f}s (once)",
+        "|",
+        f"{times:.3f}s ({rounds} times)",
+    )
     cv.imwrite(os.path.join(dir, f"convolution-blur-3x3-{filename}"), sample)
 
-    once, times = measure_time(lambda: cv.filter2D(image, -1, blur_5x5_mask, sample), rounds)
-    print("convolution-blur-5x5:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
+    once, times = measure_time(
+        lambda: cv.filter2D(image, -1, blur_5x5_mask, sample), rounds
+    )
+    print(
+        "convolution-blur-5x5:",
+        f"{once:.3f}s (once)",
+        "|",
+        f"{times:.3f}s ({rounds} times)",
+    )
     cv.imwrite(os.path.join(dir, f"convolution-blur-5x5-{filename}"), sample)
 
-    once, times = measure_time(lambda: cv.GaussianBlur(image, (3, 3), 0, sample), rounds)
-    print("gaussian-blur-3x3:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
+    once, times = measure_time(
+        lambda: cv.GaussianBlur(image, (3, 3), 0, sample), rounds
+    )
+    print(
+        "gaussian-blur-3x3:",
+        f"{once:.3f}s (once)",
+        "|",
+        f"{times:.3f}s ({rounds} times)",
+    )
     cv.imwrite(os.path.join(dir, f"gaussian-blur-3x3-{filename}"), sample)
 
 
@@ -114,7 +148,9 @@ def main():
 
     parser.add_argument("infile", type=parse_image, help="Path to image file")
     parser.add_argument("outdir", type=parse_dir, help="Path to image output directory")
-    parser.add_argument("--rounds", type=int, default=10000, help="Times to be executed, default 10")
+    parser.add_argument(
+        "--rounds", type=int, default=10000, help="Times to be executed, default 10"
+    )
 
     args = parser.parse_args()
 
