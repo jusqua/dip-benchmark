@@ -12,6 +12,6 @@ Benchmarking MATLAB performance for image processing algorithms.
 
 Inside MATLAB and in this folder, run the following commands:
 
-```matlab
-benchmark('imagefile.jpg', 'folderpath', 10000);
+```bash
+matlab -batch "benchmark([IMAGEFILE], [FOLDERPATH], [NROUNDS])"
 ```
