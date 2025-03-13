@@ -41,7 +41,9 @@ def measure_time(func: Callable[[], Any], rounds: int) -> tuple[float, float]:
 def perform_benchmark(image: MatLike, filename: str, dir: str, rounds: int):
     sample = image.copy()
 
-    star_mask = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=np.uint8)
+    cross_mask = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=np.uint8)
+    square_mask = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=np.uint8)
+
     blur_3x3_mask = np.array(
         [
             [1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0],
@@ -84,13 +86,21 @@ def perform_benchmark(image: MatLike, filename: str, dir: str, rounds: int):
     print("threshold:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
     cv.imwrite(os.path.join(dir, f"threshold-{filename}"), sample)
 
-    once, times = measure_time(lambda: cv.erode(image, star_mask, sample), rounds)
-    print("erode:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"erode-{filename}"), sample)
+    once, times = measure_time(lambda: cv.erode(image, cross_mask, sample), rounds)
+    print("erode-cross:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
+    cv.imwrite(os.path.join(dir, f"erode-cross-{filename}"), sample)
 
-    once, times = measure_time(lambda: cv.dilate(image, star_mask, sample), rounds)
-    print("dilate:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"dilate-{filename}"), sample)
+    once, times = measure_time(lambda: cv.erode(image, square_mask, sample), rounds)
+    print("erode-square:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
+    cv.imwrite(os.path.join(dir, f"erode-square-{filename}"), sample)
+
+    once, times = measure_time(lambda: cv.dilate(image, cross_mask, sample), rounds)
+    print("dilate-cross:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
+    cv.imwrite(os.path.join(dir, f"dilate-cross-{filename}"), sample)
+
+    once, times = measure_time(lambda: cv.dilate(image, square_mask, sample), rounds)
+    print("dilate-square:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
+    cv.imwrite(os.path.join(dir, f"dilate-square-{filename}"), sample)
 
     once, times = measure_time(
         lambda: cv.filter2D(image, -1, blur_3x3_mask, sample), rounds

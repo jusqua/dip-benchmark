@@ -22,6 +22,7 @@ Testing algorithms performance in GPU:
 - Thresholding
 - Erode / Dilate
   - 3x3 Cross Kernel
+  - 3x3 Square Kernel
 - Convolution
   - 3x3 Gaussian Blur Kernel
   - 5x5 Gaussian Blur Kernel

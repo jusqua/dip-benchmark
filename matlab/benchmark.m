@@ -26,7 +26,7 @@ function benchmark(infile, outdir, rounds)
     outputBase = fullfile(outdir, [name ext]);
 
     % Define processing kernels
-    [se, blur3, blur5] = createKernels();
+    [cross, square, blur3, blur5] = createKernels();
 
     % Benchmark pipeline
     operations = {
@@ -34,10 +34,12 @@ function benchmark(infile, outdir, rounds)
         @() inversionOperation(gpuImg), 'inversion';
         @() grayscaleOperation(gpuImg), 'grayscale';
         @() thresholdOperation(gpuImg), 'threshold';
-        @() erodeOperation(gpuImg, se), 'erode';
-        @() dilateOperation(gpuImg, se), 'dilate';
-        @() conv3Operation(gpuImg, blur3), 'convolution-blur-3x3';
-        @() conv5Operation(gpuImg, blur5), 'convolution-blur-5x5';
+        @() erodeOperation(gpuImg, cross), 'erode-cross';
+        @() erodeOperation(gpuImg, square), 'erode-square';
+        @() dilateOperation(gpuImg, cross), 'dilate-cross';
+        @() dilateOperation(gpuImg, square), 'dilate-square';
+        @() convOperation(gpuImg, blur3), 'convolution-blur-3x3';
+        @() convOperation(gpuImg, blur5), 'convolution-blur-5x5';
         @() gaussOperation(gpuImg), 'gaussian-blur-3x3';
     };
 
@@ -50,26 +52,27 @@ function benchmark(infile, outdir, rounds)
     end
 end
 
-function [se, blur3, blur5] = createKernels()
+function [cross, square, blur3, blur5] = createKernels()
     % Create processing kernels with double precision
-    se = strel('arbitrary', [0 1 0; 1 1 1; 0 1 0]);
-    
+    cross = strel('arbitrary', [0 1 0; 1 1 1; 0 1 0]);
+    square = strel('arbitrary', [1 1 1; 1 1 1; 1 1 1]);
+
     % Double-precision kernel definitions
-    blur3 = gpuArray(double([1  2  1; 
-                            2  4  2; 
+    blur3 = gpuArray(double([1  2  1;
+                            2  4  2;
                             1  2  1]/16));
-    
-    blur5 = gpuArray(double([1  4  6  4 1; 
-                            4 16 24 16 4; 
-                            6 24 36 24 6; 
-                            4 16 24 16 4; 
+
+    blur5 = gpuArray(double([1  4  6  4 1;
+                            4 16 24 16 4;
+                            6 24 36 24 6;
+                            4 16 24 16 4;
                             1  4  6  4 1]/256));
 end
 
 function [img, filename] = readImage(path)
     % Read and validate image
     img = imread(path);
-    
+
     % Extract filename using MATLAB's fileparts
     [~, name, ext] = fileparts(path);
     filename = [name ext]; % Combine name and extension
@@ -97,21 +100,21 @@ end
 function saveResult(result, basePath, opName)
     % Save processed image to file
     cpuResult = gather(result);
-    
+
     % Ensure proper path formatting
     basePath = convertStringsToChars(basePath);
     if iscell(basePath)
         basePath = basePath{1};
     end
-    
+
     % Split base path into components
     [fpath, fname, fext] = fileparts(basePath);
-    
+
     % Default to PNG format if no extension
     if isempty(fext)
         fext = '.png';  % Set default extension
     end
-    
+
     % Construct valid output path
     newFilename = [fname '-' opName fext];
     if isempty(fpath)
@@ -119,17 +122,17 @@ function saveResult(result, basePath, opName)
     else
         outputPath = fullfile(fpath, newFilename);
     end
-    
+
     % Ensure output directory exists
     if ~isempty(fpath) && ~exist(fpath, 'dir')
         mkdir(fpath);
     end
-    
+
     % Verify image data type
     if ~isfloat(cpuResult)
         cpuResult = im2double(cpuResult);
     end
-    
+
     imwrite(cpuResult, outputPath);
 end
 
@@ -144,6 +147,5 @@ function y = thresholdOperation(x)
 end
 function y = erodeOperation(x, se), y = imerode(x, se); end
 function y = dilateOperation(x, se), y = imdilate(x, se); end
-function y = conv3Operation(x, k), y = imfilter(x, k, 'conv'); end
-function y = conv5Operation(x, k), y = imfilter(x, k, 'conv'); end
+function y = convOperation(x, k), y = imfilter(x, k, 'conv'); end
 function y = gaussOperation(x), y = imgaussfilt(x, 0.5, 'FilterSize', 3); end
