@@ -1,4 +1,5 @@
 # Digital Image Processing Benchmark
 
-- [OpenCV Python](opencv-python/)
+- [OpenCV with Python](opencv/)
+- [CUDA with Julia](cuda/)
 - [MATLAB](matlab/)
