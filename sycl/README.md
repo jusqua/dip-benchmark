@@ -12,8 +12,13 @@ Benchmarking SYCL performance for image processing algorithms.
 
 ## Usage
 
+- You can use the preset for the `{os}` (`windows` or `linux`);
+- The default configuration use Level0 and OpenCL targets;
+- Use `cmake --preset {os} -DALLOW_HIP_TARGET=ON` to enable target for ROCM/HIP compatible GPUs
+- Use `cmake --preset {os} -DALLOW_CUDA_TARGET=ON` to enable target for CUDA compatible GPUs
+
 ```shell
-cmake --preset {os}-{gpu}-{build}
+cmake --preset {os} # -DALLOW_HIP_TARGET=ON or -DALLOW_CUDA_TARGET=ON
 cmake --build build
 ./build/benchmark [IMAGEFILE] [FOLDERPATH] [[NROUNDS] 10000]
 ```

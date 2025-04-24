@@ -12,14 +12,23 @@ namespace ch = std::chrono;
 namespace fs = std::filesystem;
 
 int priority_backend_selector_v(const sycl::device &dev) {
+    if (dev.has(sycl::aspect::cpu)) {
+        return 0;
+    }
+
     switch (dev.get_backend()) {
+#ifdef BENCHMARK_ALLOW_CUDA_TARGET
     case sycl::backend::ext_oneapi_cuda:
+        return 3;
+#endif
+#ifdef BENCHMARK_ALLOW_HIP_TARGET
     case sycl::backend::ext_oneapi_hip:
         return 3;
+#endif
     case sycl::backend::ext_oneapi_level_zero:
         return 2;
     case sycl::backend::opencl:
-        return dev.has(sycl::aspect::gpu);
+        return 1;
     default:
         return -1;
     }

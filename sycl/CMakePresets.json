@@ -8,6 +8,7 @@
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_CXX_STANDARD": "17",
         "CMAKE_TOOLCHAIN_FILE": {
           "type": "FILEPATH",
           "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
@@ -15,120 +16,25 @@
       }
     },
     {
-      "name": "base-linux",
-      "hidden": true,
+      "name": "linux",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "icx",
-        "CMAKE_CXX_COMPILER": "icpx"
+        "CMAKE_CXX_COMPILER": "icpx",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -pedantic",
+        "CMAKE_CXX_FLAGS_RELEASE": "-O3",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O0"
       }
     },
     {
-      "name": "base-windows",
-      "hidden": true,
+      "name": "windows",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "icx-cl",
-        "CMAKE_CXX_COMPILER": "icx-cl"
-      }
-    },
-    {
-      "name": "base-debug",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "base-release",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-
-    {
-      "name": "linux-intel-debug",
-      "inherits": ["base-linux", "base-debug"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "-std=c++20 -O0 -fsycl -fsycl-targets=spir64"
-      }
-    },
-    {
-      "name": "linux-amd-debug",
-      "inherits": ["base-linux", "base-debug"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "-std=c++20 -O0 -fsycl -fsycl-targets=amdgcn-amd-amdhsa,spir64"
-      }
-    },
-    {
-      "name": "linux-nvidia-debug",
-      "inherits": ["base-linux", "base-debug"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "-std=c++20 -O0 -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64"
-      }
-    },
-    {
-      "name": "linux-intel-release",
-      "inherits": ["base-linux", "base-release"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "-std=c++20 -O3 -fsycl -fsycl-targets=spir64"
-      }
-    },
-    {
-      "name": "linux-amd-release",
-      "inherits": ["base-linux", "base-release"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "-std=c++20 -O3 -fsycl -fsycl-targets=amdgcn-amd-amdhsa,spir64"
-      }
-    },
-    {
-      "name": "linux-nvidia-release",
-      "inherits": ["base-linux", "base-release"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "-std=c++20 -O3 -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64"
-      }
-    },
-    {
-      "name": "windows-intel-debug",
-      "inherits": ["base-windows", "base-debug"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/std:c++latest /O0 -fsycl -fsycl-targets=spir64"
-      }
-    },
-    {
-      "name": "windows-amd-debug",
-      "inherits": ["base-windows", "base-debug"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/std:c++latest /O0 -fsycl -fsycl-targets=amdgcn-amd-amdhsa,spir64"
-      }
-    },
-    {
-      "name": "windows-nvidia-debug",
-      "inherits": ["base-windows", "base-debug"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/std:c++latest /O0 -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64"
-      }
-    },
-    {
-      "name": "windows-intel-release",
-      "inherits": ["base-windows", "base-release"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/std:c++latest /O3 -fsycl -fsycl-targets=spir64"
-      }
-    },
-    {
-      "name": "windows-amd-release",
-      "inherits": ["base-windows", "base-release"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/std:c++latest /O3 -fsycl -fsycl-targets=amdgcn-amd-amdhsa,spir64"
-      }
-    },
-    {
-      "name": "windows-nvidia-release",
-      "inherits": ["base-windows", "base-release"],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/std:c++latest /O3 -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64"
+        "CMAKE_CXX_COMPILER": "icx-cl",
+        "CMAKE_CXX_FLAGS": "/Wall",
+        "CMAKE_CXX_FLAGS_RELEASE": "/O3",
+        "CMAKE_CXX_FLAGS_DEBUG": "/O0"
       }
     }
   ]
