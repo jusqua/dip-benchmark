@@ -194,8 +194,8 @@ public:
                     // Handle border cases with mirroring
                     if (iy < 0) iy = -iy;
                     if (ix < 0) ix = -ix;
-                    if (iy >= height) iy = 2 * height - iy - 1;
-                    if (ix >= width) ix = 2 * width - ix - 1;
+                    if (iy >= static_cast<int>(height)) iy = 2 * height - iy - 1;
+                    if (ix >= static_cast<int>(width)) ix = 2 * width - ix - 1;
 
                     // Get pixel value
                     uint8_t pixel = input[(iy * width + ix) * channels + c];
@@ -405,6 +405,8 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     sycl::nd_range<2> kernel_range(global_range, local_range);
 
     std::vector<std::tuple<std::string, std::string, std::function<void()>>> operations;
+    operations.push_back({ "Copy (Host to Device)", "", [&] { q.memcpy(d_input, image.data, total_size).wait(); } });
+    operations.push_back({ "Copy (Device to Host)", "", [&] { q.memcpy(result_buffer.data(), d_input, total_size).wait(); } });
     operations.push_back({ "Copy (Device to Device)", "copy", [&] { q.memcpy(d_output, d_input, total_size).wait(); } });
     operations.push_back({ "Invertion", "invertion", [&] { q.parallel_for(kernel_range, InvertFunctor(d_input, d_output, width, height, channels)).wait(); } });
     operations.push_back({ "Grayscale", "grayscale", [&] { q.parallel_for(kernel_range, GrayscaleFunctor(d_input, d_output, width, height, channels)).wait(); } });
