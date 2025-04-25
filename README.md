@@ -3,7 +3,7 @@
 ## Implementations
 
 - [VisionGL with C++](visiongl/) (Soon)
-- [SYCL with C++](sycl/) (Soon)
+- [SYCL with C++](sycl/)
 - [OpenCV with Python](opencv/)
 - [CUDA with Julia](cuda/)
 - [MATLAB](matlab/)
