@@ -26,17 +26,12 @@ int priority_backend_selector_v(const sycl::device& dev) {
     }
 
     switch (dev.get_backend()) {
-#ifdef BENCHMARK_ALLOW_CUDA_TARGET
-    case sycl::backend::ext_oneapi_cuda:
+    case sycl::backend::cuda:
+    case sycl::backend::hip:
         return 3;
-#endif
-#ifdef BENCHMARK_ALLOW_HIP_TARGET
-    case sycl::backend::ext_oneapi_hip:
-        return 3;
-#endif
-    case sycl::backend::ext_oneapi_level_zero:
+    case sycl::backend::ocl:
         return 2;
-    case sycl::backend::opencl:
+    case sycl::backend::level_zero:
         return 1;
     default:
         return -1;
