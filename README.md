@@ -12,6 +12,9 @@
 
 Testing algorithms performance in GPU:
 - Copy
+  - Device to Device
+  - Device to Host
+  - Host to Device
 - Inversion (Negative)
 - Greyscale
 - Thresholding
