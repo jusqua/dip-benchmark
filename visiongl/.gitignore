@@ -1,0 +1,12 @@
+build/
+.vs/
+vcpkg_installed/
+.idea/
+.vscode/
+.zed/
+.cache/
+results/
+*.swp
+*~
+.DS_Store
+Thumbs.db

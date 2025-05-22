@@ -1,0 +1,13 @@
+{
+  "dependencies": [
+    "opencl",
+    "freeglut",
+    "glew",
+    "fmt",
+    {
+      "name": "opencv4",
+      "default-features": false,
+      "features": ["jpeg", "png", "tiff", "gdcm", "webp"]
+    }
+  ]
+}
