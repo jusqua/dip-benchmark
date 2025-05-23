@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
     vglClInit();
     vglClInteropSetFalse();
     
-    auto img = vgl::opencv::load_image(inpath.c_str());
+    auto img = vgl::opencv::load_image(inpath.string().c_str());
     vglImage3To4Channels(img);
     
     auto out = vglCreateImage(img);
