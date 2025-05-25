@@ -1,5 +1,4 @@
-import os.path
-import sys
+import os
 from argparse import ArgumentParser, ArgumentTypeError
 from time import perf_counter
 from typing import Any, Callable
@@ -17,8 +16,10 @@ def parse_image(string: str) -> tuple[MatLike, str]:
 
 
 def parse_dir(string: str) -> str:
-    if not os.path.isdir(string):
+    if os.path.exists(string) and not os.path.isdir(string):
         raise ArgumentTypeError("Not a valid directory")
+
+    os.makedirs(string, exist_ok=True)
 
     return string
 
@@ -137,21 +138,6 @@ def perform_benchmark(image: MatLike, filename: str, dir: str, rounds: int):
 
 
 def main():
-    if cv.ocl.haveOpenCL():
-        if cv.ocl.useOpenCL():
-            print("OpenCL device is enabled.")
-        else:
-            print("OpenCL is available but not enabled. Enabling now.")
-            cv.ocl.setUseOpenCL(True)
-            if cv.ocl.useOpenCL():
-                print("Successfully enabled OpenCL device.")
-            else:
-                print("Failed to enable OpenCL device.", file=sys.stderr)
-                return
-    else:
-        print("OpenCL device is not available.", file=sys.stderr)
-        return
-
     parser = ArgumentParser(
         prog="benchmark.py", description="Image processing algorithms benchmark"
     )

@@ -4,9 +4,6 @@ Benchmarking OpenCV performance for image processing algorithms.
 
 ## Usage
 
-> [!IMPORTANT]
-> Make sure you have OpenCL or CUDA driver installed for your GPU device.
-
 This project uses [uv](https://docs.astral.sh/uv/) to handle dependencies.
 
 ```shell

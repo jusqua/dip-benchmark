@@ -10,7 +10,7 @@
 
 ## Benchmarks
 
-Testing algorithms performance in GPU:
+Testing algorithms:
 - Copy
   - Device to Device
   - Device to Host

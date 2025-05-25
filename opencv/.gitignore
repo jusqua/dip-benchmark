@@ -5,6 +5,10 @@ build/
 dist/
 wheels/
 *.egg-info
+.ropeproject/
 
 # Virtual environments
 .venv
+
+# Common gerenated folder
+results/
