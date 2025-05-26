@@ -37,7 +37,7 @@ function copy_kernel(input, output)
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE))
 
-    @cuda blocks=blocks threads=threads kernel!(input, output)
+    @cuda blocks = blocks threads = threads kernel!(input, output)
     return output
 end
 
@@ -89,7 +89,7 @@ function inversion_kernel(input, output)
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE))
 
-    @cuda blocks=blocks threads=threads shmem=shared_mem_size kernel!(input, output)
+    @cuda blocks = blocks threads = threads shmem = shared_mem_size kernel!(input, output)
     return output
 end
 
@@ -153,7 +153,7 @@ function grayscale_kernel(input, output)
     threads = (BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE))
 
-    @cuda blocks=blocks threads=threads shmem=shared_mem_size kernel!(input, output)
+    @cuda blocks = blocks threads = threads shmem = shared_mem_size kernel!(input, output)
     return output
 end
 
@@ -205,7 +205,7 @@ function threshold_kernel(input, output, threshold_value=0.5f0)
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE))
 
-    @cuda blocks=blocks threads=threads shmem=shared_mem_size kernel!(input, output, threshold_value)
+    @cuda blocks = blocks threads = threads shmem = shared_mem_size kernel!(input, output, threshold_value)
     return output
 end
 
@@ -252,7 +252,16 @@ function erode_kernel(input, mask, output)
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE), 1)
 
-    @cuda blocks=blocks threads=threads kernel!(input, mask, output)
+    @cuda blocks = blocks threads = threads kernel!(input, mask, output)
+    return output
+end
+
+function erode_separated_kernel(input, mask1, mask2, aux, output)
+    # First pass with mask1
+    erode_kernel(input, mask1, aux)
+    CUDA.synchronize()
+    # Second pass with mask2
+    erode_kernel(aux, mask2, output)
     return output
 end
 
@@ -299,7 +308,16 @@ function dilate_kernel(input, mask, output)
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE), 1)
 
-    @cuda blocks=blocks threads=threads kernel!(input, mask, output)
+    @cuda blocks = blocks threads = threads kernel!(input, mask, output)
+    return output
+end
+
+function dilate_separated_kernel(input, mask1, mask2, aux, output)
+    # First pass with mask1
+    dilate_kernel(input, mask1, aux)
+    CUDA.synchronize()
+    # Second pass with mask2
+    dilate_kernel(aux, mask2, output)
     return output
 end
 
@@ -339,18 +357,25 @@ function convolve_kernel(input, kernel, output)
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE), 1)
 
-    @cuda blocks=blocks threads=threads kernel!(input, kernel, output)
+    @cuda blocks = blocks threads = threads kernel!(input, kernel, output)
 
+    return output
+end
+
+function convolve_separated_kernel(input, kernel1, kernel2, aux, output)
+    # First pass with kernel1
+    convolve_kernel(input, kernel1, aux)
+    CUDA.synchronize()
+    # Second pass with kernel2
+    convolve_kernel(aux, kernel2, output)
     return output
 end
 
 function gaussian_blur_3x3_kernel(input, output)
     kernel = CuArray(Float32[
-        1.0/256.0 4.0/256.0 6.0/256.0 4.0/256.0 1.0/256.0;
-        4.0/256.0 16.0/256.0 24.0/256.0 16.0/256.0 4.0/256.0;
-        6.0/256.0 24.0/256.0 36.0/256.0 24.0/256.0 6.0/256.0;
-        4.0/256.0 16.0/256.0 24.0/256.0 16.0/256.0 4.0/256.0;
-        1.0/256.0 4.0/256.0 6.0/256.0 4.0/256.0 1.0/256.0
+        1.0/16.0 2.0/16.0 1.0/16.0;
+        2.0/16.0 4.0/16.0 2.0/16.0;
+        1.0/16.0 2.0/16.0 1.0/16.0
     ])
 
     k_height, k_width = size(kernel)
@@ -388,7 +413,7 @@ function gaussian_blur_3x3_kernel(input, output)
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE), 1)
 
-    @cuda blocks=blocks threads=threads kernel!(input, output)
+    @cuda blocks = blocks threads = threads kernel!(input, output)
     return output
 end
 
@@ -430,12 +455,15 @@ end
 function perform_benchmark(image, filename, outdir, rounds)
     d_image = CuArray{Float32}(channelview(image))
     d_sample = similar(d_image)
+    d_aux = similar(d_image)
 
     cross_mask = CUDA.zeros(3, 3)
     cross_mask[2, 1:3] .= 1
     cross_mask[1:3, 2] .= 1
 
     square_mask = CUDA.ones(3, 3)
+    square_mask_sep_1x3 = CUDA.ones(1, 3)
+    square_mask_sep_3x1 = CUDA.ones(3, 1)
 
     blur_3x3 = Float32[
         1.0/16.0 2.0/16.0 1.0/16.0;
@@ -453,82 +481,85 @@ function perform_benchmark(image, filename, outdir, rounds)
     ]
     d_blur_5x5 = CuArray(blur_5x5)
 
-    once, times = measure_time(() -> begin
+    # Separated kernels
+    blur_3x3_1x3 = CuArray(Float32[1.0 / 4.0 1.0 / 2.0 1.0 / 4.0])
+    blur_3x3_3x1 = CuArray(Float32[1.0 / 4.0; 1.0 / 2.0; 1.0 / 4.0])
+    blur_5x5_1x5 = CuArray(Float32[1.0 / 16.0 4.0 / 16.0 6.0 / 16.0 4.0 / 16.0 1.0 / 16.0])
+    blur_5x5_5x1 = CuArray(Float32[1.0 / 16.0; 4.0 / 16.0; 6.0 / 16.0; 4.0 / 16.0; 1.0 / 16.0])
+
+    # Define operations with descriptions matching Python
+    operations = [
+        ("Copy", "copy", () -> begin
             copy_kernel(d_image, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("copy: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "copy-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Inversion", "inversion", () -> begin
             inversion_kernel(d_image, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("inversion: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "inversion-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Grayscale", "grayscale", () -> begin
             grayscale_kernel(d_image, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("grayscale: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "grayscale-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Threshold", "threshold", () -> begin
             threshold_kernel(d_image, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("threshold: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "threshold-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Erosion (3x3 Cross Kernel)", "erosion-cross", () -> begin
             erode_kernel(d_image, cross_mask, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("erode-cross: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "erode-cross-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Erosion (3x3 Square Kernel)", "erosion-square", () -> begin
             erode_kernel(d_image, square_mask, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("erode-square: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "erode-square-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Erosion (1x3+3x1 Square Kernel)", "erosion-square-separated", () -> begin
+            erode_separated_kernel(d_image, square_mask_sep_1x3, square_mask_sep_3x1, d_aux, d_sample)
+            CUDA.synchronize()
+        end),
+        ("Dilation (3x3 Cross Kernel)", "dilation-cross", () -> begin
             dilate_kernel(d_image, cross_mask, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("dilate-cross: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "dilate-cross-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Dilation (3x3 Square Kernel)", "dilation-square", () -> begin
             dilate_kernel(d_image, square_mask, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("dilate-square: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "dilate-square-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", () -> begin
+            dilate_separated_kernel(d_image, square_mask_sep_1x3, square_mask_sep_3x1, d_aux, d_sample)
+            CUDA.synchronize()
+        end),
+        ("Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", () -> begin
             convolve_kernel(d_image, d_blur_3x3, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("convolution-blur-3x3: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "convolution-blur-3x3-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", () -> begin
+            convolve_separated_kernel(d_image, blur_3x3_1x3, blur_3x3_3x1, d_aux, d_sample)
+            CUDA.synchronize()
+        end),
+        ("Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", () -> begin
             convolve_kernel(d_image, d_blur_5x5, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("convolution-blur-5x5: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "convolution-blur-5x5-$(filename)"), colorview(RGB, Array(d_sample)))
-
-    once, times = measure_time(() -> begin
+        end),
+        ("Convolution (1x5+5x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5-separated", () -> begin
+            convolve_separated_kernel(d_image, blur_5x5_1x5, blur_5x5_5x1, d_aux, d_sample)
+            CUDA.synchronize()
+        end),
+        ("Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", () -> begin
             gaussian_blur_3x3_kernel(d_image, d_sample)
             CUDA.synchronize()
-        end, rounds)
-    println("gaussian-blur-3x3: $(round(once, digits=3))s (once) | $(round(times, digits=3))s ($(rounds) times)")
-    save(joinpath(outdir, "gaussian-blur-3x3-$(filename)"), colorview(RGB, Array(d_sample)))
+        end)
+    ]
+
+    # Find the longest description for formatting
+    max_desc_length = maximum(length(desc) for (desc, _, _) in operations)
+
+    for (description, prefix, func) in operations
+        once, times = measure_time(func, rounds)
+        padded_desc = rpad(description, max_desc_length)
+        println("| $padded_desc | $(lpad(string(round(once, digits=6)), 10))s (once) | $(lpad(string(round(times, digits=6)), 10))s ($rounds times) |")
+        save(joinpath(outdir, "$prefix-$filename"), colorview(RGB, Array(d_sample)))
+    end
 end
 
 function main()

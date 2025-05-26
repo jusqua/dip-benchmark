@@ -1,7 +1,4 @@
 function benchmark(infile, outdir, rounds)
-% Image Processing Benchmark with GPU Acceleration
-% Usage: benchmark_matlab('input_image.jpg', 'output_directory', [rounds=10000])
-
     if nargin < 3
         rounds = 10000;
     end
@@ -22,42 +19,68 @@ function benchmark(infile, outdir, rounds)
 
     % Prepare GPU data
     gpuImg = gpuArray(img);
+    aux = gpuArray(zeros(size(img), 'like', img));
+    sample = gpuArray(zeros(size(img), 'like', img));
     [~, name, ext] = fileparts(filename);
     outputBase = fullfile(outdir, [name ext]);
 
     % Define processing kernels
-    [cross, square, blur3, blur5] = createKernels();
+    [cross, square, square_sep_1x3, square_sep_3x1, blur3, blur5, blur3_1x3, blur3_3x1, blur5_1x5, blur5_5x1] = createKernels();
 
-    % Benchmark pipeline
+    % Define operations with descriptions matching Python
     operations = {
-        @() copyOperation(gpuImg), 'copy';
-        @() inversionOperation(gpuImg), 'inversion';
-        @() grayscaleOperation(gpuImg), 'grayscale';
-        @() thresholdOperation(gpuImg), 'threshold';
-        @() erodeOperation(gpuImg, cross), 'erode-cross';
-        @() erodeOperation(gpuImg, square), 'erode-square';
-        @() dilateOperation(gpuImg, cross), 'dilate-cross';
-        @() dilateOperation(gpuImg, square), 'dilate-square';
-        @() convOperation(gpuImg, blur3), 'convolution-blur-3x3';
-        @() convOperation(gpuImg, blur5), 'convolution-blur-5x5';
-        @() gaussOperation(gpuImg), 'gaussian-blur-3x3';
+        {@() copyOperation(gpuImg), 'Copy', 'copy'};
+        {@() inversionOperation(gpuImg), 'Inversion', 'inversion'};
+        {@() grayscaleOperation(gpuImg), 'Grayscale', 'grayscale'};
+        {@() thresholdOperation(gpuImg), 'Threshold', 'threshold'};
+        {@() erodeOperation(gpuImg, cross), 'Erosion (3x3 Cross Kernel)', 'erosion-cross'};
+        {@() erodeOperation(gpuImg, square), 'Erosion (3x3 Square Kernel)', 'erosion-square'};
+        {@() erodeSeparatedOperation(gpuImg, square_sep_1x3, square_sep_3x1, aux), 'Erosion (1x3+3x1 Square Kernel)', 'erosion-square-separated'};
+        {@() dilateOperation(gpuImg, cross), 'Dilation (3x3 Cross Kernel)', 'dilation-cross'};
+        {@() dilateOperation(gpuImg, square), 'Dilation (3x3 Square Kernel)', 'dilation-square'};
+        {@() dilateSeparatedOperation(gpuImg, square_sep_1x3, square_sep_3x1, aux), 'Dilation (1x3+3x1 Square Kernel)', 'dilation-square-separated'};
+        {@() convOperation(gpuImg, blur3), 'Convolution (3x3 Gaussian Blur Kernel)', 'convolution-gaussian-blur-3x3'};
+        {@() convSeparatedOperation(gpuImg, blur3_1x3, blur3_3x1, aux), 'Convolution (1x3+3x1 Gaussian Blur Kernel)', 'convolution-gaussian-blur-3x3-separated'};
+        {@() convOperation(gpuImg, blur5), 'Convolution (5x5 Gaussian Blur Kernel)', 'convolution-gaussian-blur-5x5'};
+        {@() convSeparatedOperation(gpuImg, blur5_1x5, blur5_5x1, aux), 'Convolution (1x5+5x1 Gaussian Blur Kernel)', 'convolution-gaussian-blur-5x5-separated'};
+        {@() gaussOperation(gpuImg), 'Gaussian Blur (3x3 Kernel)', 'gaussian-blur-3x3'};
     };
 
-    for op = operations'
-        [procFunc, opName] = op{:};
+    % Find the longest description for formatting
+    maxDescLength = 0;
+    for i = 1:size(operations, 1)
+        descLength = length(operations{i, 2});
+        if descLength > maxDescLength
+            maxDescLength = descLength;
+        end
+    end
+
+    % Benchmark pipeline
+    for i = 1:size(operations, 1)
+        procFunc = operations{i, 1};
+        description = operations{i, 2};
+        opName = operations{i, 3};
+        
         [onceTime, totalTime] = timeOperation(procFunc, rounds);
         saveResult(procFunc(), outputBase, opName);
-        fprintf('%s: %.3fs (once) | %.3fs (%d times)\n', ...
-                pad(opName, 22), onceTime, totalTime, rounds);
+        
+        % Format output to match Python exactly
+        paddedDesc = sprintf('%-*s', maxDescLength, description);
+        fprintf('| %s | %10.6fs (once) | %10.6fs (%d times) |\n', ...
+                paddedDesc, onceTime, totalTime, rounds);
     end
 end
 
-function [cross, square, blur3, blur5] = createKernels()
-    % Create processing kernels with double precision
+function [cross, square, square_sep_1x3, square_sep_3x1, blur3, blur5, blur3_1x3, blur3_3x1, blur5_1x5, blur5_5x1] = createKernels()
+    % Create processing kernels matching Python implementation
     cross = strel('arbitrary', [0 1 0; 1 1 1; 0 1 0]);
     square = strel('arbitrary', [1 1 1; 1 1 1; 1 1 1]);
+    
+    % Separated kernels for morphological operations
+    square_sep_1x3 = strel('arbitrary', [1 1 1]);
+    square_sep_3x1 = strel('arbitrary', [1; 1; 1]);
 
-    % Double-precision kernel definitions
+    % Gaussian blur kernels - double precision to match Python float32
     blur3 = gpuArray(double([1  2  1;
                             2  4  2;
                             1  2  1]/16));
@@ -67,6 +90,13 @@ function [cross, square, blur3, blur5] = createKernels()
                             6 24 36 24 6;
                             4 16 24 16 4;
                             1  4  6  4 1]/256));
+    
+    % Separated Gaussian blur kernels
+    blur3_1x3 = gpuArray(double([1/4, 1/2, 1/4]));
+    blur3_3x1 = gpuArray(double([1/4; 1/2; 1/4]));
+    
+    blur5_1x5 = gpuArray(double([1/16, 4/16, 6/16, 4/16, 1/16]));
+    blur5_5x1 = gpuArray(double([1/16; 4/16; 6/16; 4/16; 1/16]));
 end
 
 function [img, filename] = readImage(path)
@@ -116,7 +146,7 @@ function saveResult(result, basePath, opName)
     end
 
     % Construct valid output path
-    newFilename = [fname '-' opName fext];
+    newFilename = [opName '-' fname fext];
     if isempty(fpath)
         outputPath = newFilename;
     else
@@ -138,14 +168,44 @@ end
 
 % Processing operations
 function y = copyOperation(x), y = x; end
+
 function y = inversionOperation(x), y = imcomplement(x); end
+
 function y = grayscaleOperation(x)
-    y = cat(3, rgb2gray(x), rgb2gray(x), rgb2gray(x));
+    % Convert to grayscale and back to 3-channel to match Python behavior
+    gray = rgb2gray(x);
+    y = cat(3, gray, gray, gray);
 end
+
 function y = thresholdOperation(x)
-    y = uint8(x > 127) * 255;
+    % Convert to grayscale first, then threshold
+    gray = rgb2gray(x);
+    thresh = gray > (127/255);  % Normalized threshold
+    y = cat(3, thresh, thresh, thresh);
 end
+
 function y = erodeOperation(x, se), y = imerode(x, se); end
+
 function y = dilateOperation(x, se), y = imdilate(x, se); end
+
+function y = erodeSeparatedOperation(x, se1, se2, aux)
+    % Separated erosion: apply se1 then se2
+    aux = imerode(x, se1);
+    y = imerode(aux, se2);
+end
+
+function y = dilateSeparatedOperation(x, se1, se2, aux)
+    % Separated dilation: apply se1 then se2
+    aux = imdilate(x, se1);
+    y = imdilate(aux, se2);
+end
+
 function y = convOperation(x, k), y = imfilter(x, k, 'conv'); end
+
+function y = convSeparatedOperation(x, k1, k2, aux)
+    % Separated convolution: apply k1 then k2
+    aux = imfilter(x, k1, 'conv');
+    y = imfilter(aux, k2, 'conv');
+end
+
 function y = gaussOperation(x), y = imgaussfilt(x, 0.5, 'FilterSize', 3); end

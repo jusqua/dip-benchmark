@@ -1,9 +1,21 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_STANDARD 17)
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O3")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+    endif()
+endif()
+
+if(NOT CMAKE_CXX_COMPILER STREQUAL "icpx" AND
+   NOT CMAKE_CXX_COMPILER STREQUAL "icx-cl" AND
+   NOT CMAKE_CXX_COMPILER STREQUAL "acpp")
+    message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER}")
+endif()
 
 cmake_minimum_required(VERSION 3.25)
 
@@ -11,12 +23,13 @@ project(benchmark LANGUAGES CXX)
 
 set(SOURCES benchmark.cpp)
 
-find_package(AdaptiveCpp CONFIG REQUIRED)
+if (CMAKE_CXX_COMPILER STREQUAL "acpp")
+    find_package(AdaptiveCpp CONFIG REQUIRED)
+else()
+    find_package(IntelSYCL CONFIG REQUIRED)
+endif()
 find_package(OpenCV CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
-
-set(CMAKE_C_COMPILER acpp)
-set(CMAKE_CXX_COMPILER acpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS} fmt::fmt)

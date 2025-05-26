@@ -1,81 +1,12 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# CMake build directories
 build/
-out/
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-CMakeScripts/
-compile_commands.json
-CTestTestfile.cmake
-Testing/
-install_manifest.txt
-
-# MSVC specific
 .vs/
-*.suo
-*.user
-*.userosscache
-*.sdf
-*.opensdf
-*.VC.db
-*.VC.opendb
-*.VC.VC.opendb
-*.psess
-*.vsp
-*.vspx
-*.vcxproj.filters
-ipch/
-[Bb]in/
-[Dd]ebug*/
-[Rr]elease*/
-x64/
-x86/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-
-# VCPKG specific
 vcpkg_installed/
-.vscode/.cmaketools.json
-
-# IDE specific (optional)
 .idea/
 .vscode/
+.zed/
+.cache/
+results/
 *.swp
 *~
-
-# OS specific
 .DS_Store
 Thumbs.db

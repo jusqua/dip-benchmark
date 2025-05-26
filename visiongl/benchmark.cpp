@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
         fmt::println(stderr, "Error: [OUTPUT PATH] must be a path to output image file");
         return 3;
     }
-    
+
     // Create output directory if it doesn't exist
     if (!fs::exists(outpath)) {
         fs::create_directories(outpath);
@@ -87,10 +87,10 @@ int main(int argc, char** argv) {
 
     vglClInit();
     vglClInteropSetFalse();
-    
+
     auto img = vgl::opencv::load_image(inpath.string().c_str());
     vglImage3To4Channels(img);
-    
+
     auto out = vglCreateImage(img);
     auto aux = vglCreateImage(img);
 
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
         1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f
         // clang-format on
     };
-    float blur_3x1_mask[] = { 1.0f / 4.0f, 1.0f / 2.0f, 1.0f / 4.0f };
+    float blur_3x3_mask_sep[] = { 1.0f / 4.0f, 1.0f / 2.0f, 1.0f / 4.0f };
     float blur_5x5_mask[] = {
         // clang-format off
         1.0f / 256.0f,  4.0f / 256.0f,  6.0f / 256.0f,  4.0f / 256.0f, 1.0f / 256.0f,
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
         1.0f / 256.0f,  4.0f / 256.0f,  6.0f / 256.0f,  4.0f / 256.0f, 1.0f / 256.0f
         // clang-format on
     };
-    float blur_5x1_mask[] = { 1.0f / 16.0f, 4.0f / 16.0f, 6.0f / 16.0f, 4.0f / 16.0f, 1.0f / 16.0f };
+    float blur_5x5_mask_sep[] = { 1.0f / 16.0f, 4.0f / 16.0f, 6.0f / 16.0f, 4.0f / 16.0f, 1.0f / 16.0f };
 
     std::vector<std::tuple<std::string, std::string, std::function<void()>>> operations;
     operations.push_back({ "Copy (Host to Device)", "", [&] { vglClUpload(img); } });
@@ -131,15 +131,20 @@ int main(int argc, char** argv) {
     operations.push_back({ "Dilation (3x3 Square Kernel)", "dilation-square", [&] { vglClDilate(img, out, square_mask, 3, 3); } });
     operations.push_back({ "Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", [&] { vglClDilate(img, aux, square_mask_sep, 1, 3); vglClDilate(aux, out, square_mask_sep, 3, 1); } });
     operations.push_back({ "Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", [&] { vglClConvolution(img, out, blur_3x3_mask, 3, 3); } });
-    operations.push_back({ "Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", [&] { vglClConvolution(img, out, blur_3x1_mask, 1, 3); vglClConvolution(img, out, blur_3x1_mask, 3, 1); } });
+    operations.push_back({ "Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", [&] { vglClConvolution(img, out, blur_3x3_mask_sep, 1, 3); vglClConvolution(img, out, blur_3x3_mask_sep, 3, 1); } });
     operations.push_back({ "Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", [&] { vglClConvolution(img, out, blur_5x5_mask, 5, 5); } });
-    operations.push_back({ "Convolution (1x5+5x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5-separated", [&] { vglClConvolution(img, out, blur_3x1_mask, 1, 5); vglClConvolution(img, out, blur_5x1_mask, 5, 1); } });
+    operations.push_back({ "Convolution (1x5+5x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5-separated", [&] { vglClConvolution(img, out, blur_3x3_mask_sep, 1, 5); vglClConvolution(img, out, blur_5x5_mask_sep, 5, 1); } });
     operations.push_back({ "Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", [&] { vglClBlurSq3(img, out); } });
+
+    auto biggest_description_length = 0;
+    for (const auto& operation : operations) {
+        biggest_description_length = std::max(biggest_description_length, static_cast<int>(std::get<0>(operation).length()));
+    }
 
     for (auto& operation : operations) {
         auto [description, prefix, func] = operation;
         auto [once, times] = measure_time(func, rounds);
-        fmt::println("{:.3f}s (once) | {:.3f}s ({} times): {}", once, times, rounds, description);
+        fmt::println("| {: <{}} | {:10.6f}s (once) | {:10.6f}s ({} times) |", description, biggest_description_length, once, times, rounds);
 
         if (prefix.empty()) continue;
 

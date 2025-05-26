@@ -19,23 +19,12 @@ enum MORPHOLOGY_TYPE {
     DILATION
 };
 
-// Device selector function for prioritizing GPU backends
-int priority_backend_selector_v(const sycl::device& dev) {
+int computing_units_selector_v(const sycl::device& dev) {
     if (dev.has(sycl::aspect::cpu)) {
-        return 0;
-    }
-
-    switch (dev.get_backend()) {
-    case sycl::backend::cuda:
-    case sycl::backend::hip:
-        return 3;
-    case sycl::backend::ocl:
-        return 2;
-    case sycl::backend::level_zero:
-        return 1;
-    default:
         return -1;
     }
+
+    return dev.get_info<sycl::info::device::max_compute_units>();
 }
 
 // Function to measure execution time
@@ -336,6 +325,7 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
 
     // Prepare device buffers
     uint8_t* d_input = sycl::malloc_device<uint8_t>(total_size, q);
+    uint8_t* d_aux = sycl::malloc_device<uint8_t>(total_size, q);
     uint8_t* d_output = sycl::malloc_device<uint8_t>(total_size, q);
 
     // Copy input image to device
@@ -343,7 +333,7 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
 
     // Prepare masks for morphological operations
     // Cross mask (3x3)
-    const constexpr bool cross_mask_cpu[9] = {
+    const constexpr bool cross_mask[9] = {
         // clang-format off
         0, 1, 0,
         1, 1, 1,
@@ -351,10 +341,10 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
         // clang-format on
     };
     bool* d_cross_mask = sycl::malloc_device<bool>(9, q);
-    q.memcpy(d_cross_mask, cross_mask_cpu, 9 * sizeof(bool)).wait();
+    q.memcpy(d_cross_mask, cross_mask, 9 * sizeof(bool)).wait();
 
     // Square mask (3x3)
-    const constexpr bool square_mask_cpu[9] = {
+    const constexpr bool square_mask[9] = {
         // clang-format off
         1, 1, 1,
         1, 1, 1,
@@ -362,7 +352,11 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
         // clang-format on
     };
     bool* d_square_mask = sycl::malloc_device<bool>(9, q);
-    q.memcpy(d_square_mask, square_mask_cpu, 9 * sizeof(bool)).wait();
+    q.memcpy(d_square_mask, square_mask, 9 * sizeof(bool)).wait();
+    
+    const constexpr bool square_mask_sep[3] = { 1, 1, 1 };
+    bool* d_square_mask_sep = sycl::malloc_device<bool>(3, q);
+    q.memcpy(d_square_mask_sep, square_mask_sep, 3 * sizeof(bool)).wait();
 
     // Blur 3x3 mask
     const constexpr float blur_3x3_mask[9] = {
@@ -374,6 +368,10 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     };
     float* d_blur_3x3_mask = sycl::malloc_device<float>(9, q);
     q.memcpy(d_blur_3x3_mask, blur_3x3_mask, 9 * sizeof(float)).wait();
+    
+    const constexpr float blur_3x3_mask_sep[] = { 1.0f / 4.0f, 1.0f / 2.0f, 1.0f / 4.0f };
+    float* d_blur_3x3_mask_sep = sycl::malloc_device<float>(3, q);
+    q.memcpy(d_blur_3x3_mask_sep, blur_3x3_mask_sep, 3 * sizeof(float)).wait();
 
     // Blur 5x5 mask
     const constexpr float blur_5x5_mask[25] = {
@@ -387,6 +385,10 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     };
     float* d_blur_5x5_mask = sycl::malloc_device<float>(25, q);
     q.memcpy(d_blur_5x5_mask, blur_5x5_mask, 25 * sizeof(float)).wait();
+    
+    const constexpr float blur_5x5_mask_sep[] = { 1.0f / 16.0f, 4.0f / 16.0f, 6.0f / 16.0f, 4.0f / 16.0f, 1.0f / 16.0f };
+    float* d_blur_5x5_mask_sep = sycl::malloc_device<float>(5, q);
+    q.memcpy(d_blur_5x5_mask_sep, blur_5x5_mask_sep, 5 * sizeof(float)).wait();
 
     // Buffer for result retrieval
     std::vector<uint8_t> result_buffer(total_size);
@@ -403,22 +405,48 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     operations.push_back({ "Copy (Host to Device)", "", [&] { q.memcpy(d_input, image.data, total_size).wait(); } });
     operations.push_back({ "Copy (Device to Host)", "", [&] { q.memcpy(result_buffer.data(), d_input, total_size).wait(); } });
     operations.push_back({ "Copy (Device to Device)", "copy", [&] { q.memcpy(d_output, d_input, total_size).wait(); } });
+
     operations.push_back({ "Invertion", "invertion", [&] { q.parallel_for(kernel_range, InvertFunctor(d_input, d_output, width, height, channels)).wait(); } });
     operations.push_back({ "Grayscale", "grayscale", [&] { q.parallel_for(kernel_range, GrayscaleFunctor(d_input, d_output, width, height, channels)).wait(); } });
     operations.push_back({ "Threshold", "threshold", [&] { q.parallel_for(kernel_range, ThresholdFunctor(d_input, d_output, width, height, channels, 127, 255)).wait(); } });
+
     operations.push_back({ "Erosion (3x3 Cross Kernel)", "erosion-cross", [&] { q.parallel_for(kernel_range, MorphologyFunctor<EROSION>(d_input, d_output, width, height, channels, d_cross_mask, 3, 3)).wait(); } });
     operations.push_back({ "Erosion (3x3 Square Kernel)", "erosion-square", [&] { q.parallel_for(kernel_range, MorphologyFunctor<EROSION>(d_input, d_output, width, height, channels, d_square_mask, 3, 3)).wait(); } });
+    operations.push_back({ "Erosion (1x3+3x1 Square Kernel)", "erosion-square-separated", [&] {
+        q.parallel_for(kernel_range, MorphologyFunctor<EROSION>(d_input, d_aux, width, height, channels, d_square_mask_sep, 1, 3)).wait();
+        q.parallel_for(kernel_range, MorphologyFunctor<EROSION>(d_aux, d_output, width, height, channels, d_square_mask_sep, 3, 1)).wait();
+    }});
+
     operations.push_back({ "Dilation (3x3 Cross Kernel)", "dilation-cross", [&] { q.parallel_for(kernel_range, MorphologyFunctor<DILATION>(d_input, d_output, width, height, channels, d_cross_mask, 3, 3)).wait(); } });
     operations.push_back({ "Dilation (3x3 Square Kernel)", "dilation-square", [&] { q.parallel_for(kernel_range, MorphologyFunctor<DILATION>(d_input, d_output, width, height, channels, d_square_mask, 3, 3)).wait(); } });
-    operations.push_back({ "Dilation (3x3 Square Kernel)", "dilation-square", [&] { q.parallel_for(kernel_range, MorphologyFunctor<DILATION>(d_input, d_output, width, height, channels, d_square_mask, 3, 3)).wait(); } });
+    operations.push_back({ "Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", [&] {
+        q.parallel_for(kernel_range, MorphologyFunctor<DILATION>(d_input, d_aux, width, height, channels, d_square_mask_sep, 1, 3)).wait();
+        q.parallel_for(kernel_range, MorphologyFunctor<DILATION>(d_aux, d_output, width, height, channels, d_square_mask_sep, 3, 1)).wait();
+    }});
+
     operations.push_back({ "Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", [&]() { q.parallel_for(kernel_range, ConvolutionFunctor(d_input, d_output, width, height, channels, d_blur_3x3_mask, 3, 3)).wait(); } });
+    operations.push_back({ "Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", [&]() {
+        q.parallel_for(kernel_range, ConvolutionFunctor(d_input, d_aux, width, height, channels, d_blur_3x3_mask_sep, 1, 3)).wait();
+        q.parallel_for(kernel_range, ConvolutionFunctor(d_aux, d_output, width, height, channels, d_blur_3x3_mask_sep, 3, 1)).wait();
+    }});
+
     operations.push_back({ "Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", [&]() { q.parallel_for(kernel_range, ConvolutionFunctor(d_input, d_output, width, height, channels, d_blur_5x5_mask, 5, 5)).wait(); } });
-    operations.push_back({ "3x3 Gaussian Blur", "gaussian-blur-3x3", [&]() { q.parallel_for(kernel_range, GaussianBlur3x3Functor(d_input, d_output, width, height, channels)).wait(); } });
+    operations.push_back({ "Convolution (1x5+5x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5-separated", [&]() {
+        q.parallel_for(kernel_range, ConvolutionFunctor(d_input, d_aux, width, height, channels, d_blur_5x5_mask_sep, 1, 5)).wait();
+        q.parallel_for(kernel_range, ConvolutionFunctor(d_aux, d_output, width, height, channels, d_blur_5x5_mask_sep, 5, 1)).wait();
+    }});
+
+    operations.push_back({ "Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", [&]() { q.parallel_for(kernel_range, GaussianBlur3x3Functor(d_input, d_output, width, height, channels)).wait(); } });
+    
+    auto biggest_description_length = 0;
+    for (const auto& operation : operations) {
+        biggest_description_length = std::max(biggest_description_length, static_cast<int>(std::get<0>(operation).length()));
+    }
 
     for (auto& operation : operations) {
         auto [description, prefix, func] = operation;
         auto [once, times] = measure_time(func, rounds);
-        fmt::println("{}: {:.3f}s (once) | {:.3f}s ({} times)", description, once, times, rounds);
+        fmt::println("| {: <{}} | {:10.6f}s (once) | {:10.6f}s ({} times) |", description, biggest_description_length, once, times, rounds);
 
         if (prefix.empty()) continue;
 
@@ -428,11 +456,15 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     }
 
     sycl::free(d_input, q);
+    sycl::free(d_aux, q);
     sycl::free(d_output, q);
     sycl::free(d_cross_mask, q);
     sycl::free(d_square_mask, q);
+    sycl::free(d_square_mask_sep, q);
     sycl::free(d_blur_3x3_mask, q);
+    sycl::free(d_blur_3x3_mask_sep, q);
     sycl::free(d_blur_5x5_mask, q);
+    sycl::free(d_blur_5x5_mask_sep, q);
 }
 
 int main(int argc, char** argv) {
@@ -474,7 +506,7 @@ int main(int argc, char** argv) {
         return 3;
     }
 
-    auto q = sycl::queue{ priority_backend_selector_v };
+    auto q = sycl::queue{ computing_units_selector_v };
     if (!q.get_device().has(sycl::aspect::gpu)) {
         fmt::println(stderr, "Error: No GPU device found, aborting");
         return 4;

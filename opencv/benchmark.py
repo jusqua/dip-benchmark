@@ -40,10 +40,13 @@ def measure_time(func: Callable[[], Any], rounds: int) -> tuple[float, float]:
 
 
 def perform_benchmark(image: MatLike, filename: str, dir: str, rounds: int):
+    aux = image.copy()
     sample = image.copy()
 
     cross_mask = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=np.uint8)
     square_mask = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=np.uint8)
+    square_mask_sep_1x3 = np.array([[1, 1, 1]], dtype=np.uint8)
+    square_mask_sep_3x1 = np.array([[1], [1], [1]], dtype=np.uint8)
 
     blur_3x3_mask = np.array(
         [
@@ -53,6 +56,8 @@ def perform_benchmark(image: MatLike, filename: str, dir: str, rounds: int):
         ],
         dtype=np.float32,
     )
+    blur_3x3_1x3_mask = np.array([[1.0 / 4.0, 1.0 / 2.0, 1.0 / 4.0]], dtype=np.float32)
+    blur_3x3_3x1_mask = np.array([[1.0 / 4.0], [1.0 / 2.0], [1.0 / 4.0]], dtype=np.float32)
     blur_5x5_mask = np.array(
         [
             [1.0 / 256.0, 4.0 / 256.0, 6.0 / 256.0, 4.0 / 256.0, 1.0 / 256.0],
@@ -63,78 +68,54 @@ def perform_benchmark(image: MatLike, filename: str, dir: str, rounds: int):
         ],
         dtype=np.float32,
     )
+    blur_5x5_1x5_mask = np.array([[1.0 / 16.0, 4.0 / 16.0, 6.0 / 16.0, 4.0 / 16.0, 1.0 / 16.0]], dtype=np.float32)
+    blur_5x5_5x1_mask = np.array([[1.0 / 16.0], [4.0 / 16.0], [6.0 / 16.0], [4.0 / 16.0], [1.0 / 16.0]], dtype=np.float32)
 
-    once, times = measure_time(lambda: cv.copyTo(image, sample), rounds)
-    print("copy:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"copy-{filename}"), sample)
+    operations: list[tuple[str, str, Callable[[], Any]]] = []
 
-    once, times = measure_time(lambda: cv.bitwise_not(image, sample), rounds)
-    print("inversion:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"inversion-{filename}"), sample)
 
-    once, times = measure_time(
-        lambda: cv.cvtColor(
-            cv.cvtColor(image, cv.COLOR_BGR2GRAY), cv.COLOR_GRAY2BGR, sample
-        ),
-        rounds,
-    )
-    print("grayscale:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"grayscale-{filename}"), sample)
+    def erosion_separated():
+        cv.erode(image, square_mask_sep_1x3, aux)
+        cv.erode(aux, square_mask_sep_3x1, sample)
 
-    once, times = measure_time(
-        lambda: cv.threshold(image, 127, 255, cv.THRESH_BINARY, sample), rounds
-    )
-    print("threshold:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"threshold-{filename}"), sample)
 
-    once, times = measure_time(lambda: cv.erode(image, cross_mask, sample), rounds)
-    print("erode-cross:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"erode-cross-{filename}"), sample)
+    def dilation_separated():
+        cv.dilate(image, square_mask_sep_1x3, aux)
+        cv.dilate(aux, square_mask_sep_3x1, sample)
 
-    once, times = measure_time(lambda: cv.erode(image, square_mask, sample), rounds)
-    print("erode-square:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"erode-square-{filename}"), sample)
 
-    once, times = measure_time(lambda: cv.dilate(image, cross_mask, sample), rounds)
-    print("dilate-cross:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"dilate-cross-{filename}"), sample)
+    def convolution_3x3_separated():
+        cv.filter2D(image, -1, blur_3x3_1x3_mask, aux)
+        cv.filter2D(aux, -1, blur_3x3_3x1_mask, sample)
 
-    once, times = measure_time(lambda: cv.dilate(image, square_mask, sample), rounds)
-    print("dilate-square:", f"{once:.3f}s (once)", "|", f"{times:.3f}s ({rounds} times)")
-    cv.imwrite(os.path.join(dir, f"dilate-square-{filename}"), sample)
 
-    once, times = measure_time(
-        lambda: cv.filter2D(image, -1, blur_3x3_mask, sample), rounds
-    )
-    print(
-        "convolution-blur-3x3:",
-        f"{once:.3f}s (once)",
-        "|",
-        f"{times:.3f}s ({rounds} times)",
-    )
-    cv.imwrite(os.path.join(dir, f"convolution-blur-3x3-{filename}"), sample)
+    def convolution_5x5_separated():
+        cv.filter2D(image, -1, blur_5x5_1x5_mask, aux)
+        cv.filter2D(aux, -1, blur_5x5_5x1_mask, sample)
 
-    once, times = measure_time(
-        lambda: cv.filter2D(image, -1, blur_5x5_mask, sample), rounds
-    )
-    print(
-        "convolution-blur-5x5:",
-        f"{once:.3f}s (once)",
-        "|",
-        f"{times:.3f}s ({rounds} times)",
-    )
-    cv.imwrite(os.path.join(dir, f"convolution-blur-5x5-{filename}"), sample)
+    operations.append(("Copy", "copy", lambda: cv.copyTo(image, sample)))
+    operations.append(("Inversion", "inversion", lambda: cv.bitwise_not(image, sample)))
+    operations.append(("Grayscale", "grayscale", lambda: cv.cvtColor(cv.cvtColor(image, cv.COLOR_BGR2GRAY), cv.COLOR_GRAY2BGR, sample)))
+    operations.append(("Threshold", "threshold", lambda: cv.threshold(image, 127, 255, cv.THRESH_BINARY, sample)))
+    operations.append(("Erosion (3x3 Cross Kernel)", "erosion-cross", lambda: cv.erode(image, cross_mask, sample)))
+    operations.append(("Erosion (3x3 Square Kernel)", "erosion-square", lambda: cv.erode(image, square_mask, sample)))
+    operations.append(("Erosion (1x3+3x1 Square Kernel)", "erosion-square-separated", erosion_separated))
+    operations.append(("Dilation (3x3 Cross Kernel)", "dilation-cross", lambda: cv.dilate(image, cross_mask, sample)))
+    operations.append(("Dilation (3x3 Square Kernel)", "dilation-square", lambda: cv.dilate(image, square_mask, sample)))
+    operations.append(("Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", dilation_separated))
+    operations.append(("Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", lambda: cv.filter2D(image, -1, blur_3x3_mask, sample)))
+    operations.append(("Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", convolution_3x3_separated))
+    operations.append(("Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", lambda: cv.filter2D(image, -1, blur_5x5_mask, sample)))
+    operations.append(("Convolution (1x5+5x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", lambda: convolution_5x5_separated))
+    operations.append(("Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", lambda: cv.GaussianBlur(image, (3, 3), 0, sample)))
 
-    once, times = measure_time(
-        lambda: cv.GaussianBlur(image, (3, 3), 0, sample), rounds
-    )
-    print(
-        "gaussian-blur-3x3:",
-        f"{once:.3f}s (once)",
-        "|",
-        f"{times:.3f}s ({rounds} times)",
-    )
-    cv.imwrite(os.path.join(dir, f"gaussian-blur-3x3-{filename}"), sample)
+    biggest_description_length = max(len(desc) for desc, _, _ in operations)
+
+    for description, prefix, func in operations:
+        time_once, time_rounds = measure_time(func, rounds)
+        print(f"| {description: <{biggest_description_length}} | {time_once:10.6f}s (once) | {time_rounds:10.6f}s ({rounds} times) |")
+
+        cv.imwrite(os.path.join(dir, f"{prefix}-{filename}"), sample)
 
 
 def main():
