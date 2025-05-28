@@ -11,9 +11,10 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     endif()
 endif()
 
-if(NOT CMAKE_CXX_COMPILER STREQUAL "icpx" AND
-   NOT CMAKE_CXX_COMPILER STREQUAL "icx-cl" AND
-   NOT CMAKE_CXX_COMPILER STREQUAL "acpp")
+get_filename_component(CXX_COMPILER_NAME ${CMAKE_CXX_COMPILER} NAME)
+if(NOT CXX_COMPILER_NAME STREQUAL "icpx" AND
+   NOT CXX_COMPILER_NAME STREQUAL "icx-cl" AND
+   NOT CXX_COMPILER_NAME STREQUAL "acpp")
     message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER}")
 endif()
 
@@ -23,7 +24,7 @@ project(benchmark LANGUAGES CXX)
 
 set(SOURCES benchmark.cpp)
 
-if (CMAKE_CXX_COMPILER STREQUAL "acpp")
+if (CXX_COMPILER_NAME STREQUAL "acpp")
     find_package(AdaptiveCpp CONFIG REQUIRED)
 else()
     find_package(IntelSYCL CONFIG REQUIRED)
