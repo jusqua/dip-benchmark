@@ -23,6 +23,7 @@ cmake_minimum_required(VERSION 3.25)
 project(benchmark LANGUAGES CXX)
 
 set(SOURCES benchmark.cpp)
+set(SOURCES_BINDLESS benchmark_bindless.cpp)
 
 if (CXX_COMPILER_NAME STREQUAL "acpp")
     find_package(AdaptiveCpp CONFIG REQUIRED)
@@ -32,6 +33,12 @@ endif()
 find_package(OpenCV CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
+# Original benchmark
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS} fmt::fmt)
 add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES ${SOURCES})
+
+# Bindless images benchmark
+add_executable(${PROJECT_NAME}_bindless ${SOURCES_BINDLESS})
+target_link_libraries(${PROJECT_NAME}_bindless PRIVATE ${OpenCV_LIBS} fmt::fmt)
+add_sycl_to_target(TARGET ${PROJECT_NAME}_bindless SOURCES ${SOURCES_BINDLESS})
