@@ -1,8 +1,6 @@
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
-#include <sycl/ext/oneapi/bindless_images.hpp>
-#include <sycl/ext/oneapi/bindless_images_descriptor.hpp>
 #include <sycl/image.hpp>
 #include <tuple>
 #include <vector>
