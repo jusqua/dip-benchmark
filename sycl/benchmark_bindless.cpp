@@ -1,6 +1,9 @@
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
+#include <sycl/ext/oneapi/bindless_images.hpp>
+#include <sycl/ext/oneapi/bindless_images_descriptor.hpp>
+#include <sycl/image.hpp>
 #include <tuple>
 #include <vector>
 #include <string>
@@ -365,14 +368,14 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     }
 
     // Create image descriptors
-    syclexp::image_descriptor input_desc({width, height}, 4, syclexp::image_type::standard, syclexp::image_format::r32g32b32a32_sfloat);
-    syclexp::image_descriptor output_desc({width, height}, 4, syclexp::image_type::standard, syclexp::image_format::r32g32b32a32_sfloat);
-    syclexp::image_descriptor aux_desc({width, height}, 4, syclexp::image_type::standard, syclexp::image_format::r32g32b32a32_sfloat);
+    syclexp::image_descriptor input_desc({width, height}, 4, sycl::image_channel_type::fp32);
+    syclexp::image_descriptor output_desc({width, height}, 4, sycl::image_channel_type::fp32);
+    syclexp::image_descriptor aux_desc({width, height}, 4, sycl::image_channel_type::fp32);
 
     // Allocate device memory for images
-    auto input_mem = syclexp::alloc_image_mem(input_desc, q);
-    auto output_mem = syclexp::alloc_image_mem(output_desc, q);
-    auto aux_mem = syclexp::alloc_image_mem(aux_desc, q);
+    syclexp::image_mem input_mem(input_desc, q);
+    syclexp::image_mem output_mem(output_desc, q);
+    syclexp::image_mem aux_mem(aux_desc, q);
 
     // Create bindless image handles
     auto input_handle = syclexp::create_image(input_mem, input_desc, q);
@@ -534,9 +537,9 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     syclexp::destroy_image_handle(input_handle, q);
     syclexp::destroy_image_handle(output_handle, q);
     syclexp::destroy_image_handle(aux_handle, q);
-    syclexp::free_image_mem(input_mem, q);
-    syclexp::free_image_mem(output_mem, q);
-    syclexp::free_image_mem(aux_mem, q);
+    syclexp::free_image_mem(input_mem.get_handle(), syclexp::image_type::standard, q);
+    syclexp::free_image_mem(output_mem.get_handle(), syclexp::image_type::standard, q);
+    syclexp::free_image_mem(aux_mem.get_handle(), syclexp::image_type::standard, q);
     
     sycl::free(d_cross_mask, q);
     sycl::free(d_square_mask, q);
@@ -599,7 +602,7 @@ int main(int argc, char** argv) {
     }
 
     // Check for bindless images support
-    if (!q.get_device().has(syclexp::aspect::ext_oneapi_bindless_images)) {
+    if (!q.get_device().has(sycl::aspect::ext_oneapi_bindless_images)) {
         fmt::println(stderr, "Error: Device does not support bindless images, aborting");
         return 6;
     }
