@@ -15,8 +15,7 @@
 \usepackage{cite}
 \usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}
 \usepackage{makeidx}
-% \usepackage{helvet}
-\usepackage[liberation]{libertine}
+\usepackage{helvet}
 \usepackage{graphicx}
 \usepackage{sectsty}
 \usepackage{tocbibind}% ddantas 24/3/2021
@@ -50,8 +49,6 @@
 \usepackage{listings}
 \usepackage{xcolor}
 
-\onehalfspacing
-
 \lstset{ frame=TB, numbers=left, stepnumber=1, basicstyle=\ttfamily\scriptsize,
 captionpos=b, xleftmargin=0.7cm, xrightmargin=0.4cm, escapechar=@, breaklines=true,
 %postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}, retirada do espaço em branco
@@ -60,21 +57,21 @@ captionpos=b, xleftmargin=0.7cm, xrightmargin=0.4cm, escapechar=@, breaklines=tr
 %LSTLISTING USADO ANTERIOMENTE
 \begin{comment}
 \lstdefinestyle{mystyle}{
-    backgroundcolor=\color{backcolour},   
+    backgroundcolor=\color{backcolour},
     commentstyle=\color{codegreen},
     keywordstyle=\color{magenta},
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
     basicstyle=\ttfamily\footnotesize,
-    breakatwhitespace=false,         
-    breaklines=true,                 
-    captionpos=b,                    
-    keepspaces=true,                 
-    numbers=left,                    
-    numbersep=5pt,                  
-    showspaces=false,                
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
     showstringspaces=false,
-    showtabs=false,                  
+    showtabs=false,
     tabsize=2
 }
 \lstset{style=mystyle}
@@ -104,212 +101,212 @@ captionpos=b, xleftmargin=0.7cm, xrightmargin=0.4cm, escapechar=@, breaklines=tr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
-  %% Capa
-  \begin{figure}[!h]
-    \centering
-    %\includegraphics[scale=0.2]{logo/recorte.png}
-    \includegraphics[scale=0.45]{logo/ufs_noframe.png}
-  \end{figure}
+%% Capa
+\begin{figure}[!h]
+	\centering
+	%\includegraphics[scale=0.2]{logo/recorte.png}
+	\includegraphics[scale=0.45]{logo/ufs_noframe.png}
+\end{figure}
 
-  \begin{center}
-    \textbf{ SERVIÇO PÚBLICO FEDERAL\\
-    UNIVERSIDADE FEDERAL DE SERGIPE\\
-    PRÓ-REITORIA DE PÓS-GRADUAÇÃO E PESQUISA}
-    \vspace{10mm}
+\begin{center}
+	\textbf{ SERVIÇO PÚBLICO FEDERAL\\
+		UNIVERSIDADE FEDERAL DE SERGIPE\\
+		PRÓ-REITORIA DE PÓS-GRADUAÇÃO E PESQUISA}
+	\vspace{10mm}
 
-    PROGRAMA DE INICIAÇÃO CIENTÍFICA - PIBICVOL
+	PROGRAMA DE INICIAÇÃO CIENTÍFICA - PIBICVOL
 
-    \vspace{15mm}
+	\vspace{15mm}
 
-    \textbf{\Large
-    %Título do plano de trabalho
-    IMPLEMENTAÇÃO DE OPERADORES DE PROCESSAMENTO DE IMAGENS EM OPENCL }
+	\textbf{\Large
+		%Título do plano de trabalho
+		IMPLEMENTAÇÃO DE OPERADORES DE PROCESSAMENTO DE IMAGENS EM OPENCL }
 
-    %% Descomentar em caso de IC Departamental
-    %% ddantas 25/11/2024
-    %\vspace{15mm}
-    %
-    %Discente: Ariel Lima Abade Bandeira
-    %
-    %Orientador: Daniel Oliveira Dantas
-    %% FIM Descomentar em caso de IC Departamental
+	%% Descomentar em caso de IC Departamental
+	%% ddantas 25/11/2024
+	%\vspace{15mm}
+	%
+	%Discente: Ariel Lima Abade Bandeira
+	%
+	%Orientador: Daniel Oliveira Dantas
+	%% FIM Descomentar em caso de IC Departamental
 
-    \vspace{15mm}
+	\vspace{15mm}
 
-    %% Usar áreas do conhecimento do CNPq conforme a tabela abaixo
-    %% https://www.dropbox.com/scl/fi/1fxb483lnt57x2oo9cn11/areas_CNPq.pdf
-    %% ddantas 06/08/2021
-    Área do conhecimento: Ciência da Computação\\
-    Subárea do conhecimento: Metodologia e Técnicas da Computação \\
-    Especialidade do conhecimento: Processamento Gráfico (Graphics) \\
+	%% Usar áreas do conhecimento do CNPq conforme a tabela abaixo
+	%% https://www.dropbox.com/scl/fi/1fxb483lnt57x2oo9cn11/areas_CNPq.pdf
+	%% ddantas 06/08/2021
+	Área do conhecimento: Ciência da Computação\\
+	Subárea do conhecimento: Metodologia e Técnicas da Computação \\
+	Especialidade do conhecimento: Processamento Gráfico (Graphics) \\
 
-    \vspace{19mm}
+	\vspace{19mm}
 
-    Relatório Final\\
-    %% Caso haja bolsa, descomentar a linha abaixo.
-    %% ddantas 19/08/2024
-    %Período da bolsa: de (mês e ano) a (mês e ano)
+	Relatório Final\\
+	%% Caso haja bolsa, descomentar a linha abaixo.
+	%% ddantas 19/08/2024
+	%Período da bolsa: de (mês e ano) a (mês e ano)
 
-    \vspace{10mm}
+	\vspace{10mm}
 
-    {\large Este projeto é desenvolvido com/sem bolsa de iniciação científica}
-    \vspace{10mm}
+	{\large Este projeto é desenvolvido com/sem bolsa de iniciação científica}
+	\vspace{10mm}
 
-    \large{
-    %% Descomentar a linha correspondente ao tipo de bolsa.
-
-
-    %% ddantas 19/08/2024
+	\large{
+		%% Descomentar a linha correspondente ao tipo de bolsa.
 
 
-    %PIBIC/COPES\\
+		%% ddantas 19/08/2024
 
 
-    %\\ou\\
+		%PIBIC/COPES\\
 
 
-    %PIBIC/CNPq
+		%\\ou\\
 
 
-    %\\ou\\
+		%PIBIC/CNPq
 
 
-    %PIBIC/FAPITEC
+		%\\ou\\
 
 
-    %\\ou\\
-    PIBICVOL\\
-    %\\ou\\
+		%PIBIC/FAPITEC
 
 
-    %Iniciação Científica Departamental\\
-    }
-  \end{center}
+		%\\ou\\
+		PIBICVOL\\
+		%\\ou\\
 
-  \newpage
 
-  %% Sumário
-  \begin{flushleft}
-    \tableofcontents
-  \end{flushleft}
+		%Iniciação Científica Departamental\\
+	}
+\end{center}
 
-  \newpage
+\newpage
 
-  % FEITO
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \section{Introdução}
+%% Sumário
+\begin{flushleft}
+	\tableofcontents
+\end{flushleft}
 
-  O uso de imagens na medicina é muito disseminado, por isso, é de bastante importância
-  tanto para o diagnóstico quanto para as pesquisas. A implementação de
-  processamento de imagens médicas em tempo real demanda o uso de computadores
-  com muitos núcleos e uma grande capacidade de memória.
+\newpage
 
-  A fim de minimizar o tempo de processamento utilizamos a linguagem OpenCL. Porém,
-  programar em OpenCL acaba sendo difícil, pois a execução de um \textit{kernel}
-  precisa de muitas chamadas á API. Essas chamadas são feitas através de um \textit{wrapper},
-  que pode ser gerado automaticamente. Um \textit{wrapper} é uma classe que contém
-  a instância de outra classe, mas não expõe diretamente essa instância. Para o nosso
-  estudo utilizamos a VisionGL~\cite{visiongl} que fornece a geração de um código
-  \textit{wrapper} para CUDA, GLSL e OpenCL.
+% FEITO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introdução}
 
-  O aumento da demanda por maior desempenho computacional, especialmente em
-  áreas que requer processamento de grande volume de dados em diversas
-  estruturas, levou ao crescente uso de arquiteturas heterogêneas como GPUs e Aceleradores
-  diversos. A diversidade de arquiteturas contém desafios para portabilidade de
-  ferramentas computacionais. A especificação SYCL \cite{sycl2020} apresenta uma
-  camada de abstração de que permite o desenvolvimento de programas para processamento
-  heterogêneo em C++ com APIs para trabalhar CPUs, GPUs e FPGAs. Em nosso estudo
-  utilizamos Intel oneAPI Data Parallel C++ Compiler \cite{inteldpcpp}, uma
-  implementação da especificação SYCL, para analisar a viabilidade para processamento
-  de imagens médicas.
+O uso de imagens na medicina é muito disseminado, por isso, é de bastante importância
+tanto para o diagnóstico quanto para as pesquisas. A implementação de
+processamento de imagens médicas em tempo real demanda o uso de computadores
+com muitos núcleos e uma grande capacidade de memória.
 
-  % FEITO
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \section{Objetivos}
+A fim de minimizar o tempo de processamento utilizamos a linguagem OpenCL. Porém,
+programar em OpenCL acaba sendo difícil, pois a execução de um \textit{kernel}
+precisa de muitas chamadas á API. Essas chamadas são feitas através de um \textit{wrapper},
+que pode ser gerado automaticamente. Um \textit{wrapper} é uma classe que contém
+a instância de outra classe, mas não expõe diretamente essa instância. Para o nosso
+estudo utilizamos a VisionGL~\cite{visiongl} que fornece a geração de um código
+\textit{wrapper} para CUDA, GLSL e OpenCL.
 
-  O objetivo deste estudo é ampliar o suporte ao processamento de imagens
-  tridimensionais da biblioteca VisionGL e adicionalmente verificar a
-  viabilidade do SYCL para processamento de imagens. Para atingir os objetivos foram
-  feitos os seguintes passos:
+O aumento da demanda por maior desempenho computacional, especialmente em
+áreas que requer processamento de grande volume de dados em diversas
+estruturas, levou ao crescente uso de arquiteturas heterogêneas como GPUs e Aceleradores
+diversos. A diversidade de arquiteturas contém desafios para portabilidade de
+ferramentas computacionais. A especificação SYCL \cite{sycl2020} apresenta uma
+camada de abstração de que permite o desenvolvimento de programas para processamento
+heterogêneo em C++ com APIs para trabalhar CPUs, GPUs e FPGAs. Em nosso estudo
+utilizamos Intel oneAPI Data Parallel C++ Compiler \cite{inteldpcpp}, uma
+implementação da especificação SYCL, para analisar a viabilidade para processamento
+de imagens médicas.
 
-  \begin{enumerate}
-    \item Desenvolver operadores existentes na biblioteca VisionGL em SYCL.
+% FEITO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Objetivos}
 
-    \item Comparar o desempenho desses operadores com o de outras ferramentas de
-      processamento de imagens.
+O objetivo deste estudo é ampliar o suporte ao processamento de imagens
+tridimensionais da biblioteca VisionGL e adicionalmente verificar a
+viabilidade do SYCL para processamento de imagens. Para atingir os objetivos foram
+feitos os seguintes passos:
 
-    \item Analisar os resultados e aplicar os operadores na biblioteca VisionGL.
-  \end{enumerate}
+\begin{enumerate}
+	\item Desenvolver operadores existentes na biblioteca VisionGL em SYCL.
 
-  Embora o projeto não tenha sido concluído em sua totalidade, este relatório descreve
-  as etapas realizadas até a interrupção da pesquisa.
+	\item Comparar o desempenho desses operadores com o de outras ferramentas de
+	      processamento de imagens.
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \section{Metodologia}
+	\item Analisar os resultados e aplicar os operadores na biblioteca VisionGL.
+\end{enumerate}
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \subsection{Desenvolvimento dos operadores}
+Embora o projeto não tenha sido concluído em sua totalidade, este relatório descreve
+as etapas realizadas até a interrupção da pesquisa.
 
-  Nesta etapa, escolhemos algoritmos de processamento de imagens existentes na
-  VisionGL para adaptação dos conceitos originais para a especificação SYCL, explorando
-  sua capacidade de gerenciar computação heterogênea e paralelismo de forma. A
-  implementação dos operadores foi realizada utilizando o Intel oneAPI Data
-  Parallel C++ Compiler, que é uma implementação da especificação SYCL.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Metodologia}
 
-  Escolhemos os seguintes operadores para implementação:
-  \begin{itemize}
-    \item operador de filtro gaussiano
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Desenvolvimento dos operadores}
 
-    \item operador de convolução
+Nesta etapa, escolhemos algoritmos de processamento de imagens existentes na
+VisionGL para adaptação dos conceitos originais para a especificação SYCL, explorando
+sua capacidade de gerenciar computação heterogênea e paralelismo de forma. A
+implementação dos operadores foi realizada utilizando o Intel oneAPI Data
+Parallel C++ Compiler, que é uma implementação da especificação SYCL.
 
-    \item operadores ponto a ponto: inversão, escala de cinza e \textit{thresholding}
+Escolhemos os seguintes operadores para implementação:
+\begin{itemize}
+	\item operador de filtro gaussiano
 
-    \item operadores morfológicos: dilatação e erosão
-  \end{itemize}
+	\item operador de convolução
 
-  Além disso, é necessário analisar a transferência de dados entre a memória do
-  dispositivo e a memória do hospedeiro (\textit{upload}/\textit{download}), bem
-  como o gerenciamento de memória para garantir que os dados sejam acessados de forma
-  eficiente durante a execução dos \textit{kernels}.
+	\item operadores ponto a ponto: inversão, escala de cinza e \textit{thresholding}
 
-  \subsection{Resolução}
+	\item operadores morfológicos: dilatação e erosão
+\end{itemize}
 
-  O projeto foi interrompido antes de sua conclusão, portanto não foi possível
-  realizar a comparação de desempenho entre os operadores SYCL e os operadores
-  OpenCL da VisionGL. No entanto, a implementação dos operadores SYCL foi
-  concluída e está disponível no repositório do projeto \cite{visionsycl}.
+Além disso, é necessário analisar a transferência de dados entre a memória do
+dispositivo e a memória do hospedeiro (\textit{upload}/\textit{download}), bem
+como o gerenciamento de memória para garantir que os dados sejam acessados de forma
+eficiente durante a execução dos \textit{kernels}.
 
-  % FEITO
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \section{Perspectivas de futuros trabalhos}
+\subsection{Resolução}
 
-  O projeto foi interrompido antes de sua conclusão, o que abre a possibilidade
-  de continuação em pesquisas futuras. Entre as próximas etapas previstas destacam-se:
-  \begin{enumerate}
-    \item Comparação de operadores existentes na VisionGL com os operadores SYCL.
+O projeto foi interrompido antes de sua conclusão, portanto não foi possível
+realizar a comparação de desempenho entre os operadores SYCL e os operadores
+OpenCL da VisionGL. No entanto, a implementação dos operadores SYCL foi
+concluída e está disponível no repositório do projeto \cite{visionsycl}.
 
-    \item Implementação de operadores SYCL compatíveis com a biblioteca VisionGL.
-  \end{enumerate}
+% FEITO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Perspectivas de futuros trabalhos}
 
-  % FEITO
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \section{JUSTIFICATIVA DE ALTERAÇÃO NO PLANO DE TRABALHO}
+O projeto foi interrompido antes de sua conclusão, o que abre a possibilidade
+de continuação em pesquisas futuras. Entre as próximas etapas previstas destacam-se:
+\begin{enumerate}
+	\item Comparação de operadores existentes na VisionGL com os operadores SYCL.
 
-  O plano de trabalho foi modificado devido o interesse em outras ferramentas de
-  processamento paralelo que poderiam trazer outros horizontes para a biblioteca
-  VisionGL.
+	\item Implementação de operadores SYCL compatíveis com a biblioteca VisionGL.
+\end{enumerate}
 
-  \bibliography{refs.bib}
-  \nocite{visiongl}
+% FEITO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{JUSTIFICATIVA DE ALTERAÇÃO NO PLANO DE TRABALHO}
+
+O plano de trabalho foi modificado devido o interesse em outras ferramentas de
+processamento paralelo que poderiam trazer outros horizontes para a biblioteca
+VisionGL.
+
+\bibliography{refs.bib}
+\nocite{visiongl}
 \end{document}
