@@ -482,10 +482,10 @@ function perform_benchmark(image, filename, outdir, rounds)
     d_blur_5x5 = CuArray(blur_5x5)
 
     # Separated kernels
-    blur_3x3_1x3 = CuArray(Float32[1.0 / 4.0 1.0 / 2.0 1.0 / 4.0])
-    blur_3x3_3x1 = CuArray(Float32[1.0 / 4.0; 1.0 / 2.0; 1.0 / 4.0])
-    blur_5x5_1x5 = CuArray(Float32[1.0 / 16.0 4.0 / 16.0 6.0 / 16.0 4.0 / 16.0 1.0 / 16.0])
-    blur_5x5_5x1 = CuArray(Float32[1.0 / 16.0; 4.0 / 16.0; 6.0 / 16.0; 4.0 / 16.0; 1.0 / 16.0])
+    blur_3x3_1x3 = CuArray(reshape(Float32[1.0/4.0, 1.0/2.0, 1.0/4.0], 1, 3))
+    blur_3x3_3x1 = CuArray(reshape(Float32[1.0/4.0, 1.0/2.0, 1.0/4.0], 3, 1))
+    blur_5x5_1x5 = CuArray(reshape(Float32[1.0/16.0, 4.0/16.0, 6.0/16.0, 4.0/16.0, 1.0/16.0], 1, 5))
+    blur_5x5_5x1 = CuArray(reshape(Float32[1.0/16.0, 4.0/16.0, 6.0/16.0, 4.0/16.0, 1.0/16.0], 5, 1))
 
     # Define operations with descriptions matching Python
     operations = [
