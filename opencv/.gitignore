@@ -6,4 +6,3 @@ wheels/
 *.egg-info
 .ropeproject/
 .venv
-results/
