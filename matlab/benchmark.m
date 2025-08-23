@@ -1,4 +1,7 @@
 function benchmark(infile, outdir, rounds)
+    % Force forward compatibility for CUDA
+    parallel.gpu.enableCUDAForwardCompatibility(true);
+
     if nargin < 3
         rounds = 10000;
     end
