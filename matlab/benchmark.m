@@ -52,7 +52,7 @@ function benchmark(infile, outdir, rounds)
     % Find the longest description for formatting
     maxDescLength = 0;
     for i = 1:size(operations, 1)
-        descLength = length(operations{i, 2});
+        descLength = length(operations{i}{2});
         if descLength > maxDescLength
             maxDescLength = descLength;
         end
@@ -60,13 +60,13 @@ function benchmark(infile, outdir, rounds)
 
     % Benchmark pipeline
     for i = 1:size(operations, 1)
-        procFunc = operations{i, 1};
-        description = operations{i, 2};
-        opName = operations{i, 3};
-        
+        procFunc = operations{i}{1};
+        description = operations{i}{2};
+        opName = operations{i}{3};
+
         [onceTime, totalTime] = timeOperation(procFunc, rounds);
         saveResult(procFunc(), outputBase, opName);
-        
+
         % Format output to match Python exactly
         paddedDesc = sprintf('%-*s', maxDescLength, description);
         fprintf('| %s | %10.6fs (once) | %10.6fs (%d times) |\n', ...
@@ -78,7 +78,7 @@ function [cross, square, square_sep_1x3, square_sep_3x1, blur3, blur5, blur3_1x3
     % Create processing kernels matching Python implementation
     cross = strel('arbitrary', [0 1 0; 1 1 1; 0 1 0]);
     square = strel('arbitrary', [1 1 1; 1 1 1; 1 1 1]);
-    
+
     % Separated kernels for morphological operations
     square_sep_1x3 = strel('arbitrary', [1 1 1]);
     square_sep_3x1 = strel('arbitrary', [1; 1; 1]);
@@ -93,11 +93,11 @@ function [cross, square, square_sep_1x3, square_sep_3x1, blur3, blur5, blur3_1x3
                             6 24 36 24 6;
                             4 16 24 16 4;
                             1  4  6  4 1]/256));
-    
+
     % Separated Gaussian blur kernels
     blur3_1x3 = gpuArray(double([1/4, 1/2, 1/4]));
     blur3_3x1 = gpuArray(double([1/4; 1/2; 1/4]));
-    
+
     blur5_1x5 = gpuArray(double([1/16, 4/16, 6/16, 4/16, 1/16]));
     blur5_5x1 = gpuArray(double([1/16; 4/16; 6/16; 4/16; 1/16]));
 end
