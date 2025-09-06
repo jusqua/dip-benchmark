@@ -104,7 +104,6 @@ captionpos=b, xleftmargin=0.7cm, xrightmargin=0.4cm, escapechar=@, breaklines=tr
 %% Capa
 \begin{figure}[!h]
 	\centering
-	%\includegraphics[scale=0.2]{logo/recorte.png}
 	\includegraphics[scale=0.45]{logo/ufs_noframe.png}
 \end{figure}
 
@@ -118,9 +117,8 @@ captionpos=b, xleftmargin=0.7cm, xrightmargin=0.4cm, escapechar=@, breaklines=tr
 
 	\vspace{15mm}
 
-	\textbf{\Large
-		%Título do plano de trabalho
-		IMPLEMENTAÇÃO DE OPERADORES DE PROCESSAMENTO DE IMAGENS EM OPENCL }
+	%Título do plano de trabalho
+	\textbf{\Large IMPLEMENTAÇÃO DE OPERADORES DE PROCESSAMENTO DE IMAGENS EM OPENCL }
 
 	%% Descomentar em caso de IC Departamental
 	%% ddantas 25/11/2024
@@ -193,58 +191,57 @@ captionpos=b, xleftmargin=0.7cm, xrightmargin=0.4cm, escapechar=@, breaklines=tr
 
 \newpage
 
-% FEITO
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introdução}
 
-O uso de imagens na medicina é muito disseminado, por isso, é de bastante importância
-tanto para o diagnóstico quanto para as pesquisas. A implementação de
-processamento de imagens médicas em tempo real demanda o uso de computadores
-com muitos núcleos e uma grande capacidade de memória.
+O aumento da demanda por maior desempenho computacional, especialmente em áreas que requer processamento
+de grande volume de dados em diversas estruturas, levou ao crescente uso de arquiteturas heterogêneas como
+CPUs (do inglês \textit{Central Processing Unit}), GPUs (do inglês \textit{Graphics Processing Unit}) e
+aceleradores diversos. A diversidade de arquiteturas contém desafios para portabilidade de ferramentas computacionais.
 
-A fim de minimizar o tempo de processamento utilizamos a linguagem OpenCL. Porém,
-programar em OpenCL acaba sendo difícil, pois a execução de um \textit{kernel}
-precisa de muitas chamadas á API. Essas chamadas são feitas através de um \textit{wrapper},
-que pode ser gerado automaticamente. Um \textit{wrapper} é uma classe que contém
-a instância de outra classe, mas não expõe diretamente essa instância. Para o nosso
-estudo utilizamos a VisionGL~\cite{visiongl} que fornece a geração de um código
-\textit{wrapper} para CUDA, GLSL e OpenCL.
+O \textit{framework} proprietário CUDA~\cite{cuda2008} promove uma API (do inglês \textit{Application Programming Interface})
+para desenvolvimento de programas com processamento paralelo em dispositivos de GPU específicos da fabricante NVIDIA.
+Utilizaremos a linguagem de programação Julia como o pacote CUDA.jl~\cite{besard2018juliagpu} para produzir algoritmos de processamento de imagens.
 
-O aumento da demanda por maior desempenho computacional, especialmente em
-áreas que requer processamento de grande volume de dados em diversas
-estruturas, levou ao crescente uso de arquiteturas heterogêneas como GPUs e Aceleradores
-diversos. A diversidade de arquiteturas contém desafios para portabilidade de
-ferramentas computacionais. A especificação SYCL \cite{sycl2020} apresenta uma
-camada de abstração de que permite o desenvolvimento de programas para processamento
-heterogêneo em C++ com APIs para trabalhar CPUs, GPUs e FPGAs. Em nosso estudo
-utilizamos Intel oneAPI Data Parallel C++ Compiler \cite{inteldpcpp}, uma
-implementação da especificação SYCL, para analisar a viabilidade para processamento
-de imagens médicas.
+O \textit{framework} SYCL~\cite{sycl2020} apresenta uma camada de abstração de que permite o
+desenvolvimento de programas para processamento heterogêneo na linguagem C++ com APIs para trabalhar CPUs, GPUs e FPGAs.
+Em nosso estudo utilizamos AdaptiveCPP~\cite{acpp}, uma implementação da especificação SYCL, para analisar a
+viabilidade para processamento de imagens médicas.
 
-% FEITO
+A ferramenta MATLAB desenvolvida pela \citeauthor{matlab2025} utiliza um linguagem programação
+própria que permite a criação de algoritmos e modelos matemáticos e conta com funções integradas
+para processamento de imagens em GPUs NVIDIA.
+
+A biblioteca OpenCV~\cite{opencv2000} conta com funções integradas para processamento de imagens e manipulação de imagens
+em CPU, mas também conta com estruturas para processamento em GPUs utilizando OpenCL e CUDA. Utilizaremos a biblioteca pors
+meio da linguagem de programação Python na versão 3 para aplicarmos os algoritmos desenvolvidos.
+
+A biblioteca VisionGL~\cite{visiongl} expõe funções para processamento paralelo de imagens 2D e 3D~\cite{Dantas2015opencl}
+utiliza o \textit{framework} OpenCL~\cite{opencl2025} para acesso a arquiteturas heterogêneas compatíveis.
+
+Utilizaremos os algorítmos apresentados em \citeauthor{Dantas2015opencl} para compararmos o desempenho dos operadores de
+processamento de imagens e os resultados obtidos.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Objetivos}
 
-O objetivo deste estudo é ampliar o suporte ao processamento de imagens
-tridimensionais da biblioteca VisionGL e adicionalmente verificar a
-viabilidade do SYCL para processamento de imagens. Para atingir os objetivos foram
-feitos os seguintes passos:
+\subsection{Objetivos Gerais}
+
+O objetivo deste estudo é ampliar o suporte ao processamento de imagens da biblioteca VisionGL
+ao verificar a viabilidade de outras ferramentas para processamento de imagens.
+
+\subsection{Objetivos Específicos}
 
 \begin{enumerate}
-	\item Desenvolver operadores existentes na biblioteca VisionGL em SYCL.
-
-	\item Comparar o desempenho desses operadores com o de outras ferramentas de
-	      processamento de imagens.
-
-	\item Analisar os resultados e aplicar os operadores na biblioteca VisionGL.
+	\item Desenvolver operadores existentes na biblioteca VisionGL em SYCL com AdaptiveCPP e Cuda com Julia.
+	\item Desenvolver benchmarks para VisionGL, SYCL, CUDA, OpenCV e MATLAB.
+	\item Comparar a forma como foi implementada os operadores em cada ferramenta.
+	\item Analisar o desempenho ao aplicar o benchmark na mesma imagem.
 \end{enumerate}
-
-Embora o projeto não tenha sido concluído em sua totalidade, este relatório descreve
-as etapas realizadas até a interrupção da pesquisa.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -256,19 +253,13 @@ as etapas realizadas até a interrupção da pesquisa.
 \subsection{Desenvolvimento dos operadores}
 
 Nesta etapa, escolhemos algoritmos de processamento de imagens existentes na
-VisionGL para adaptação dos conceitos originais para a especificação SYCL, explorando
-sua capacidade de gerenciar computação heterogênea e paralelismo de forma. A
-implementação dos operadores foi realizada utilizando o Intel oneAPI Data
-Parallel C++ Compiler, que é uma implementação da especificação SYCL.
+VisionGL para adaptação dos conceitos originais para as ferramentas que buscamos
+analizar.
 
-Escolhemos os seguintes operadores para implementação:
 \begin{itemize}
-	\item operador de filtro gaussiano
-
+	\item operador de filtro desfoque gaussiano
 	\item operador de convolução
-
 	\item operadores ponto a ponto: inversão, escala de cinza e \textit{thresholding}
-
 	\item operadores morfológicos: dilatação e erosão
 \end{itemize}
 
@@ -282,7 +273,7 @@ eficiente durante a execução dos \textit{kernels}.
 O projeto foi interrompido antes de sua conclusão, portanto não foi possível
 realizar a comparação de desempenho entre os operadores SYCL e os operadores
 OpenCL da VisionGL. No entanto, a implementação dos operadores SYCL foi
-concluída e está disponível no repositório do projeto \cite{visionsycl}.
+concluída e está disponível no repositório do projeto.
 
 % FEITO
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -294,7 +285,6 @@ O projeto foi interrompido antes de sua conclusão, o que abre a possibilidade
 de continuação em pesquisas futuras. Entre as próximas etapas previstas destacam-se:
 \begin{enumerate}
 	\item Comparação de operadores existentes na VisionGL com os operadores SYCL.
-
 	\item Implementação de operadores SYCL compatíveis com a biblioteca VisionGL.
 \end{enumerate}
 
