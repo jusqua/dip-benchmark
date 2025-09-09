@@ -13,21 +13,17 @@ function copy_kernel(input, output)
     height = size(input, 3)
 
     function kernel!(input, output)
-        c = threadIdx().x  # Channel
-        tx = threadIdx().y  # Local x position
-        ty = threadIdx().z  # Local y position
+        c = threadIdx().x
+        tx = threadIdx().y
+        ty = threadIdx().z
 
-        # Block index
         bx = blockIdx().x
         by = blockIdx().y
 
-        # Global position
         gx = (bx - 1) * BLOCK_SIZE + tx
         gy = (by - 1) * BLOCK_SIZE + ty
 
-        # Process only valid pixels
         if 1 <= gx <= width && 1 <= gy <= height && c <= num_channels
-            # Simple copy with coalesced memory access
             output[c, gx, gy] = input[c, gx, gy]
         end
 
@@ -46,44 +42,35 @@ function inversion_kernel(input, output)
     width = size(input, 2)
     height = size(input, 3)
 
-    # For shared memory optimization, we can load tiles of the image
     tile_width = BLOCK_SIZE
     tile_height = BLOCK_SIZE
 
     function kernel!(input, output)
-        c = threadIdx().x  # Channel
-        tx = threadIdx().y  # Local x position
-        ty = threadIdx().z  # Local y position
+        c = threadIdx().x
+        tx = threadIdx().y
+        ty = threadIdx().z
 
-        # Block index
         bx = blockIdx().x
         by = blockIdx().y
 
-        # Global position
         gx = (bx - 1) * BLOCK_SIZE + tx
         gy = (by - 1) * BLOCK_SIZE + ty
 
-        # Allocate shared memory tile
         tile = @cuDynamicSharedMem(Float32, (num_channels, tile_width, tile_height))
 
-        # Load data into shared memory
         if 1 <= gx <= width && 1 <= gy <= height && c <= num_channels
             tile[c, tx, ty] = input[c, gx, gy]
         end
 
-        # Ensure all threads have loaded their data
         sync_threads()
 
-        # Process only valid pixels
         if 1 <= gx <= width && 1 <= gy <= height && c <= num_channels
-            # Invert value from shared memory
             output[c, gx, gy] = 1.0f0 - tile[c, tx, ty]
         end
 
         return nothing
     end
 
-    # Calculate shared memory size
     shared_mem_size = num_channels * tile_width * tile_height * sizeof(Float32)
 
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
@@ -98,47 +85,36 @@ function grayscale_kernel(input, output)
     width = size(input, 2)
     height = size(input, 3)
 
-    # For shared memory optimization, we can load tiles of the image
     tile_width = BLOCK_SIZE
     tile_height = BLOCK_SIZE
 
     function kernel!(input, output)
-        # Thread index
-        tx = threadIdx().x  # Local x position
-        ty = threadIdx().y  # Local y position
+        tx = threadIdx().x
+        ty = threadIdx().y
 
-        # Block index
         bx = blockIdx().x
         by = blockIdx().y
 
-        # Global position
         gx = (bx - 1) * BLOCK_SIZE + tx
         gy = (by - 1) * BLOCK_SIZE + ty
 
-        # Allocate shared memory for RGB values
         rgb_values = @cuDynamicSharedMem(Float32, (3, tile_width, tile_height))
 
-        # Load RGB values into shared memory
         if 1 <= gx <= width && 1 <= gy <= height
-            # Load all 3 channels for this pixel
             for c in 1:min(3, num_channels)
                 rgb_values[c, tx, ty] = input[c, gx, gy]
             end
         end
 
-        # Ensure all RGB values are loaded
         sync_threads()
 
-        # Process only valid pixels
         if 1 <= gx <= width && 1 <= gy <= height
-            # Calculate average (grayscale value)
             gray_value = 0.0f0
             for c in 1:min(3, num_channels)
                 gray_value += rgb_values[c, tx, ty]
             end
             gray_value /= min(3, num_channels)
 
-            # Set all channels to the gray value
             for c in 1:min(3, num_channels)
                 output[c, gx, gy] = gray_value
             end
@@ -147,7 +123,6 @@ function grayscale_kernel(input, output)
         return nothing
     end
 
-    # Calculate shared memory size
     shared_mem_size = 3 * tile_width * tile_height * sizeof(Float32)
 
     threads = (BLOCK_SIZE, BLOCK_SIZE)
@@ -162,44 +137,35 @@ function threshold_kernel(input, output, threshold_value=0.5f0)
     width = size(input, 2)
     height = size(input, 3)
 
-    # For shared memory optimization, we can load tiles of the image
     tile_width = BLOCK_SIZE
     tile_height = BLOCK_SIZE
 
     function kernel!(input, output, threshold_value)
-        c = threadIdx().x  # Channel
-        tx = threadIdx().y  # Local x position
-        ty = threadIdx().z  # Local y position
+        c = threadIdx().x
+        tx = threadIdx().y  
+        ty = threadIdx().z  
 
-        # Block index
         bx = blockIdx().x
         by = blockIdx().y
 
-        # Global position
         gx = (bx - 1) * BLOCK_SIZE + tx
         gy = (by - 1) * BLOCK_SIZE + ty
 
-        # Allocate shared memory tile
         tile = @cuDynamicSharedMem(Float32, (num_channels, tile_width, tile_height))
 
-        # Load data into shared memory
         if 1 <= gx <= width && 1 <= gy <= height && c <= num_channels
             tile[c, tx, ty] = input[c, gx, gy]
         end
 
-        # Ensure all threads have loaded their data
         sync_threads()
 
-        # Process only valid pixels
         if 1 <= gx <= width && 1 <= gy <= height && c <= num_channels
-            # Apply threshold from shared memory
             output[c, gx, gy] = tile[c, tx, ty] > threshold_value ? 1.0f0 : 0.0f0
         end
 
         return nothing
     end
 
-    # Calculate shared memory size
     shared_mem_size = num_channels * tile_width * tile_height * sizeof(Float32)
 
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
@@ -257,10 +223,8 @@ function erode_kernel(input, mask, output)
 end
 
 function erode_separated_kernel(input, mask1, mask2, aux, output)
-    # First pass with mask1
     erode_kernel(input, mask1, aux)
     CUDA.synchronize()
-    # Second pass with mask2
     erode_kernel(aux, mask2, output)
     return output
 end
@@ -313,10 +277,8 @@ function dilate_kernel(input, mask, output)
 end
 
 function dilate_separated_kernel(input, mask1, mask2, aux, output)
-    # First pass with mask1
     dilate_kernel(input, mask1, aux)
     CUDA.synchronize()
-    # Second pass with mask2
     dilate_kernel(aux, mask2, output)
     return output
 end
@@ -363,10 +325,8 @@ function convolve_kernel(input, kernel, output)
 end
 
 function convolve_separated_kernel(input, kernel1, kernel2, aux, output)
-    # First pass with kernel1
     convolve_kernel(input, kernel1, aux)
     CUDA.synchronize()
-    # Second pass with kernel2
     convolve_kernel(aux, kernel2, output)
     return output
 end
@@ -481,13 +441,11 @@ function perform_benchmark(image, filename, outdir, rounds)
     ]
     d_blur_5x5 = CuArray(blur_5x5)
 
-    # Separated kernels
     blur_3x3_1x3 = CuArray(reshape(Float32[1.0/4.0, 1.0/2.0, 1.0/4.0], 1, 3))
     blur_3x3_3x1 = CuArray(reshape(Float32[1.0/4.0, 1.0/2.0, 1.0/4.0], 3, 1))
     blur_5x5_1x5 = CuArray(reshape(Float32[1.0/16.0, 4.0/16.0, 6.0/16.0, 4.0/16.0, 1.0/16.0], 1, 5))
     blur_5x5_5x1 = CuArray(reshape(Float32[1.0/16.0, 4.0/16.0, 6.0/16.0, 4.0/16.0, 1.0/16.0], 5, 1))
 
-    # Define operations with descriptions matching Python
     operations = [
         ("Copy", "copy", () -> begin
             copy_kernel(d_image, d_sample)
@@ -551,7 +509,6 @@ function perform_benchmark(image, filename, outdir, rounds)
         end)
     ]
 
-    # Find the longest description for formatting
     max_desc_length = maximum(length(desc) for (desc, _, _) in operations)
 
     for (description, prefix, func) in operations
