@@ -413,7 +413,8 @@ function measure_time(func, rounds)
 end
 
 function perform_benchmark(image, filename, outdir, rounds)
-    d_image = CuArray{Float32}(channelview(image))
+    image = channelview(image)
+    d_image = CuArray{Float32}(image)
     d_sample = similar(d_image)
     d_aux = similar(d_image)
 
@@ -447,7 +448,13 @@ function perform_benchmark(image, filename, outdir, rounds)
     blur_5x5_5x1 = CuArray(reshape(Float32[1.0/16.0, 4.0/16.0, 6.0/16.0, 4.0/16.0, 1.0/16.0], 5, 1))
 
     operations = [
-        ("Copy", "copy", () -> begin
+        ("Upload (Host to Device)", nothing, () -> begin
+            CuArray(image);
+        end),
+        ("Download (Device to Host)", nothing, () -> begin
+            Array(d_image);
+        end),
+        ("Copy (Device to Device)", "copy", () -> begin
             copy_kernel(d_image, d_sample)
             CUDA.synchronize()
         end),
@@ -513,8 +520,15 @@ function perform_benchmark(image, filename, outdir, rounds)
 
     for (description, prefix, func) in operations
         once, times = measure_time(func, rounds)
-        padded_desc = rpad(description, max_desc_length)
-        println("| $padded_desc | $(lpad(string(round(once, digits=6)), 10))s (once) | $(lpad(string(round(times, digits=6)), 10))s ($rounds times) |")
+
+        print("| $(rpad(description, max_desc_length)) | $(lpad(string(round(once, digits=6)), 10))s (once) |")
+        if rounds > 1
+            print(" $(lpad(string(round(times, digits=6)), 10))s ($rounds times) |")
+        end
+        println()
+
+        if (prefix === nothing) continue end
+
         save(joinpath(outdir, "$prefix-$filename"), colorview(RGB, Array(d_sample)))
     end
 end
