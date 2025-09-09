@@ -7,12 +7,12 @@ using Statistics
 
 const BLOCK_SIZE = 16
 
-function copy_kernel(input, output)
+@inline function copy_kernel(input, output)
     num_channels = size(input, 1)
     width = size(input, 2)
     height = size(input, 3)
 
-    function kernel!(input, output)
+    @inline function kernel!(input, output)
         c = threadIdx().x
         tx = threadIdx().y
         ty = threadIdx().z
@@ -37,7 +37,7 @@ function copy_kernel(input, output)
     return output
 end
 
-function inversion_kernel(input, output)
+@inline function inversion_kernel(input, output)
     num_channels = size(input, 1)
     width = size(input, 2)
     height = size(input, 3)
@@ -45,7 +45,7 @@ function inversion_kernel(input, output)
     tile_width = BLOCK_SIZE
     tile_height = BLOCK_SIZE
 
-    function kernel!(input, output)
+    @inline function kernel!(input, output)
         c = threadIdx().x
         tx = threadIdx().y
         ty = threadIdx().z
@@ -80,7 +80,7 @@ function inversion_kernel(input, output)
     return output
 end
 
-function grayscale_kernel(input, output)
+@inline function grayscale_kernel(input, output)
     num_channels = size(input, 1)
     width = size(input, 2)
     height = size(input, 3)
@@ -88,7 +88,7 @@ function grayscale_kernel(input, output)
     tile_width = BLOCK_SIZE
     tile_height = BLOCK_SIZE
 
-    function kernel!(input, output)
+    @inline function kernel!(input, output)
         tx = threadIdx().x
         ty = threadIdx().y
 
@@ -132,7 +132,7 @@ function grayscale_kernel(input, output)
     return output
 end
 
-function threshold_kernel(input, output, threshold_value=0.5f0)
+@inline function threshold_kernel(input, output, threshold_value=0.5f0)
     num_channels = size(input, 1)
     width = size(input, 2)
     height = size(input, 3)
@@ -140,7 +140,7 @@ function threshold_kernel(input, output, threshold_value=0.5f0)
     tile_width = BLOCK_SIZE
     tile_height = BLOCK_SIZE
 
-    function kernel!(input, output, threshold_value)
+    @inline function kernel!(input, output, threshold_value)
         c = threadIdx().x
         tx = threadIdx().y  
         ty = threadIdx().z  
@@ -175,7 +175,7 @@ function threshold_kernel(input, output, threshold_value=0.5f0)
     return output
 end
 
-function erode_kernel(input, mask, output)
+@inline function erode_kernel(input, mask, output)
     m_height, m_width = size(mask)
     m_half_height = m_height ÷ 2
     m_half_width = m_width ÷ 2
@@ -184,7 +184,7 @@ function erode_kernel(input, mask, output)
     width = size(input, 2)
     height = size(input, 3)
 
-    function kernel!(input, mask, output)
+    @inline function kernel!(input, mask, output)
         c = threadIdx().x
         x = blockIdx().x * blockDim().y + threadIdx().y
         y = blockIdx().y * blockDim().z + threadIdx().z
@@ -222,14 +222,13 @@ function erode_kernel(input, mask, output)
     return output
 end
 
-function erode_separated_kernel(input, mask1, mask2, aux, output)
+@inline function erode_separated_kernel(input, mask1, mask2, aux, output)
     erode_kernel(input, mask1, aux)
-    CUDA.synchronize()
     erode_kernel(aux, mask2, output)
     return output
 end
 
-function dilate_kernel(input, mask, output)
+@inline function dilate_kernel(input, mask, output)
     m_height, m_width = size(mask)
     m_half_height = m_height ÷ 2
     m_half_width = m_width ÷ 2
@@ -238,7 +237,7 @@ function dilate_kernel(input, mask, output)
     width = size(input, 2)
     height = size(input, 3)
 
-    function kernel!(input, mask, output)
+    @inline function kernel!(input, mask, output)
         c = threadIdx().x
         x = blockIdx().x * blockDim().y + threadIdx().y
         y = blockIdx().y * blockDim().z + threadIdx().z
@@ -276,14 +275,13 @@ function dilate_kernel(input, mask, output)
     return output
 end
 
-function dilate_separated_kernel(input, mask1, mask2, aux, output)
+@inline function dilate_separated_kernel(input, mask1, mask2, aux, output)
     dilate_kernel(input, mask1, aux)
-    CUDA.synchronize()
     dilate_kernel(aux, mask2, output)
     return output
 end
 
-function convolve_kernel(input, kernel, output)
+@inline function convolve_kernel(input, kernel, output)
     k_height, k_width = size(kernel)
     k_half_height = k_height ÷ 2
     k_half_width = k_width ÷ 2
@@ -292,7 +290,7 @@ function convolve_kernel(input, kernel, output)
     width = size(input, 2)
     height = size(input, 3)
 
-    function kernel!(input, kernel, output)
+    @inline function kernel!(input, kernel, output)
         c = threadIdx().x
         x = blockIdx().x * blockDim().y + threadIdx().y
         y = blockIdx().y * blockDim().z + threadIdx().z
@@ -324,14 +322,13 @@ function convolve_kernel(input, kernel, output)
     return output
 end
 
-function convolve_separated_kernel(input, kernel1, kernel2, aux, output)
+@inline function convolve_separated_kernel(input, kernel1, kernel2, aux, output)
     convolve_kernel(input, kernel1, aux)
-    CUDA.synchronize()
     convolve_kernel(aux, kernel2, output)
     return output
 end
 
-function gaussian_blur_3x3_kernel(input, output)
+@inline function gaussian_blur_3x3_kernel(input, output)
     kernel = CuArray(Float32[
         1.0/16.0 2.0/16.0 1.0/16.0;
         2.0/16.0 4.0/16.0 2.0/16.0;
@@ -346,7 +343,7 @@ function gaussian_blur_3x3_kernel(input, output)
     width = size(input, 2)
     height = size(input, 3)
 
-    function kernel!(input, output)
+    @inline function kernel!(input, output)
         c = threadIdx().x
         x = blockIdx().x * blockDim().y + threadIdx().y
         y = blockIdx().y * blockDim().z + threadIdx().z
@@ -456,63 +453,48 @@ function perform_benchmark(image, filename, outdir, rounds)
         end),
         ("Copy (Device to Device)", "copy", () -> begin
             copy_kernel(d_image, d_sample)
-            CUDA.synchronize()
         end),
         ("Inversion", "inversion", () -> begin
             inversion_kernel(d_image, d_sample)
-            CUDA.synchronize()
         end),
         ("Grayscale", "grayscale", () -> begin
             grayscale_kernel(d_image, d_sample)
-            CUDA.synchronize()
         end),
         ("Threshold", "threshold", () -> begin
             threshold_kernel(d_image, d_sample)
-            CUDA.synchronize()
         end),
         ("Erosion (3x3 Cross Kernel)", "erosion-cross", () -> begin
             erode_kernel(d_image, cross_mask, d_sample)
-            CUDA.synchronize()
         end),
         ("Erosion (3x3 Square Kernel)", "erosion-square", () -> begin
             erode_kernel(d_image, square_mask, d_sample)
-            CUDA.synchronize()
         end),
         ("Erosion (1x3+3x1 Square Kernel)", "erosion-square-separated", () -> begin
             erode_separated_kernel(d_image, square_mask_sep_1x3, square_mask_sep_3x1, d_aux, d_sample)
-            CUDA.synchronize()
         end),
         ("Dilation (3x3 Cross Kernel)", "dilation-cross", () -> begin
             dilate_kernel(d_image, cross_mask, d_sample)
-            CUDA.synchronize()
         end),
         ("Dilation (3x3 Square Kernel)", "dilation-square", () -> begin
             dilate_kernel(d_image, square_mask, d_sample)
-            CUDA.synchronize()
         end),
         ("Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", () -> begin
             dilate_separated_kernel(d_image, square_mask_sep_1x3, square_mask_sep_3x1, d_aux, d_sample)
-            CUDA.synchronize()
         end),
         ("Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", () -> begin
             convolve_kernel(d_image, d_blur_3x3, d_sample)
-            CUDA.synchronize()
         end),
         ("Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", () -> begin
             convolve_separated_kernel(d_image, blur_3x3_1x3, blur_3x3_3x1, d_aux, d_sample)
-            CUDA.synchronize()
         end),
         ("Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", () -> begin
             convolve_kernel(d_image, d_blur_5x5, d_sample)
-            CUDA.synchronize()
         end),
         ("Convolution (1x5+5x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5-separated", () -> begin
             convolve_separated_kernel(d_image, blur_5x5_1x5, blur_5x5_5x1, d_aux, d_sample)
-            CUDA.synchronize()
         end),
         ("Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", () -> begin
             gaussian_blur_3x3_kernel(d_image, d_sample)
-            CUDA.synchronize()
         end)
     ]
 
