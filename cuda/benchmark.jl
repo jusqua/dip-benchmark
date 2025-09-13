@@ -142,8 +142,8 @@ end
 
     @inline function kernel!(input, output, threshold_value)
         c = threadIdx().x
-        tx = threadIdx().y  
-        ty = threadIdx().z  
+        tx = threadIdx().y
+        ty = threadIdx().z
 
         bx = blockIdx().x
         by = blockIdx().y
@@ -516,12 +516,12 @@ function perform_benchmark(image, filename, outdir, rounds)
 end
 
 function main()
-    if CUDA.functional()
-        println("CUDA is available. Using device: $(CUDA.name(CUDA.device()))")
-    else
+    if !CUDA.functional()
         println("CUDA is not available. Exiting.")
         return
     end
+
+    println("Using device: $(CUDA.name(CUDA.device()))")
 
     args = parse_commandline()
 
