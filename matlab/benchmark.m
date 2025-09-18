@@ -32,6 +32,8 @@ function benchmark(infile, outdir, rounds)
 
     % Define operations with descriptions matching Python
     operations = {
+        {@() uploadOperation(img), 'Upload', ''};
+        {@() downloadOperation(gpuImg), 'Download', ''};
         {@() copyOperation(gpuImg), 'Copy', 'copy'};
         {@() inversionOperation(gpuImg), 'Inversion', 'inversion'};
         {@() grayscaleOperation(gpuImg), 'Grayscale', 'grayscale'};
@@ -169,7 +171,11 @@ function saveResult(result, basePath, opName)
     imwrite(cpuResult, outputPath);
 end
 
-% Processing operations
+function y = uploadOperation(x), y = gpuArray(x); end
+
+function y = downloadOperation(x), y = gather(x); end
+
+% No COW operation in GPU so this works as a deep copy
 function y = copyOperation(x), y = x; end
 
 function y = inversionOperation(x), y = imcomplement(x); end
