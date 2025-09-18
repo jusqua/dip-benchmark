@@ -38,10 +38,10 @@ def measure_time(func: Callable[[], Any], rounds: int) -> tuple[float, float]:
     return (time_end_once - time_start_once, time_end_times - time_start_times)
 
 
-def perform_benchmark(image: np.ndarray, filename: str, dir: str, rounds: int):
-    work_image = cv.UMat(image)  # type: ignore
-    aux = cv.UMat(image)  # type: ignore
-    sample = cv.UMat(image)  # type: ignore
+def perform_benchmark(cpu_image: np.ndarray, filename: str, dir: str, rounds: int):
+    image = cv.UMat(cpu_image)  # type: ignore
+    aux = cv.UMat(cpu_image)  # type: ignore
+    sample = cv.UMat(cpu_image)  # type: ignore
 
     cross_mask = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=np.uint8)
     square_mask = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=np.uint8)
@@ -74,21 +74,23 @@ def perform_benchmark(image: np.ndarray, filename: str, dir: str, rounds: int):
     operations: list[tuple[str, str, Callable[[], Any]]] = []
 
     def erosion_separated():
-        cv.erode(work_image, square_mask_sep_1x3, aux)  # type: ignore
+        cv.erode(image, square_mask_sep_1x3, aux)  # type: ignore
         cv.erode(aux, square_mask_sep_3x1, sample)  # type: ignore
 
     def dilation_separated():
-        cv.dilate(work_image, square_mask_sep_1x3, aux)  # type: ignore
+        cv.dilate(image, square_mask_sep_1x3, aux)  # type: ignore
         cv.dilate(aux, square_mask_sep_3x1, sample)  # type: ignore
 
     def convolution_3x3_separated():
-        cv.filter2D(work_image, -1, blur_3x3_1x3_mask, aux)  # type: ignore
+        cv.filter2D(image, -1, blur_3x3_1x3_mask, aux)  # type: ignore
         cv.filter2D(aux, -1, blur_3x3_3x1_mask, sample)  # type: ignore
 
     def convolution_5x5_separated():
-        cv.filter2D(work_image, -1, blur_5x5_1x5_mask, aux)  # type: ignore
+        cv.filter2D(image, -1, blur_5x5_1x5_mask, aux)  # type: ignore
         cv.filter2D(aux, -1, blur_5x5_5x1_mask, sample)  # type: ignore
 
+    operations.append(("Upload", "", lambda: cv.UMat(cpu_image)))  # type: ignore
+    operations.append(("Download", "", lambda: image.get()))  # type: ignore
     operations.append(("Copy", "copy", lambda: cv.copyTo(image, sample)))  # type: ignore
     operations.append(("Inversion", "inversion", lambda: cv.bitwise_not(image, sample)))  # type: ignore
     operations.append(("Grayscale", "grayscale", lambda: cv.cvtColor(cv.cvtColor(image, cv.COLOR_BGR2GRAY), cv.COLOR_GRAY2BGR, sample)))  # type: ignore
@@ -96,14 +98,14 @@ def perform_benchmark(image: np.ndarray, filename: str, dir: str, rounds: int):
     operations.append(("Erosion (3x3 Cross Kernel)", "erosion-cross", lambda: cv.erode(image, cross_mask, sample)))  # type: ignore
     operations.append(("Erosion (3x3 Square Kernel)", "erosion-square", lambda: cv.erode(image, square_mask, sample)))  # type: ignore
     operations.append(("Erosion (1x3+3x1 Square Kernel)", "erosion-square-separated", erosion_separated))
-    operations.append(("Dilation (3x3 Cross Kernel)", "dilation-cross", lambda: cv.dilate(work_image, cross_mask, sample)))  # type: ignore
-    operations.append(("Dilation (3x3 Square Kernel)", "dilation-square", lambda: cv.dilate(work_image, square_mask, sample)))  # type: ignore
+    operations.append(("Dilation (3x3 Cross Kernel)", "dilation-cross", lambda: cv.dilate(image, cross_mask, sample)))  # type: ignore
+    operations.append(("Dilation (3x3 Square Kernel)", "dilation-square", lambda: cv.dilate(image, square_mask, sample)))  # type: ignore
     operations.append(("Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", dilation_separated))
-    operations.append(("Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", lambda: cv.filter2D(work_image, -1, blur_3x3_mask, sample)))  # type: ignore
+    operations.append(("Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", lambda: cv.filter2D(image, -1, blur_3x3_mask, sample)))  # type: ignore
     operations.append(("Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", convolution_3x3_separated))
-    operations.append(("Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", lambda: cv.filter2D(work_image, -1, blur_5x5_mask, sample)))  # type: ignore
+    operations.append(("Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", lambda: cv.filter2D(image, -1, blur_5x5_mask, sample)))  # type: ignore
     operations.append(("Convolution (1x5+5x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5-separated", convolution_5x5_separated))
-    operations.append(("Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", lambda: cv.GaussianBlur(work_image, (3, 3), 0, sample)))  # type: ignore
+    operations.append(("Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", lambda: cv.GaussianBlur(image, (3, 3), 0, sample)))  # type: ignore
 
     biggest_description_length = max(len(desc) for desc, _, _ in operations)
 
