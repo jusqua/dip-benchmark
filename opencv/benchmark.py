@@ -118,19 +118,15 @@ def perform_benchmark(cpu_image: cv.typing.MatLike, filename: str, dir: str, rou
 
 
 def main():
-    if cv.ocl.haveOpenCL():
-        cv.ocl.setUseOpenCL(True)
-        try:
-            device = cv.ocl.Device.getDefault()
-            print(f"Device: {device.name()}")
-        except:
-            print("No GPU device found")
-            return
+    if not cv.ocl.haveOpenCL():
+        print("No OpenCL support found")
+        return
+
+    cv.ocl.setUseOpenCL(True)
 
     parser = ArgumentParser(
         prog="benchmark.py", description="Image processing algorithms benchmark with OpenCL acceleration"
     )
-
     parser.add_argument("infile", type=parse_image, help="Path to image file")
     parser.add_argument("outdir", type=parse_dir, help="Path to image output directory")
     parser.add_argument(
