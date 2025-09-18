@@ -233,13 +233,13 @@ function perform_benchmark(image, filename, outdir, rounds)
     d_blur_5x5_5x1 = CuArray(reshape(Float32[1.0/16.0, 4.0/16.0, 6.0/16.0, 4.0/16.0, 1.0/16.0], 5, 1))
 
     operations = [
-        ("Upload (Host to Device)", nothing, () -> begin
+        ("Upload", nothing, () -> begin
             CuArray(image);
         end),
-        ("Download (Device to Host)", nothing, () -> begin
+        ("Download", nothing, () -> begin
             Array(d_input);
         end),
-        ("Copy (Device to Device)", "copy", () -> begin
+        ("Copy", "copy", () -> begin
             @cuda blocks = blocks threads = threads copy_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE)
         end),
         ("Inversion", "inversion", () -> begin
