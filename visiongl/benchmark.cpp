@@ -118,9 +118,9 @@ int main(int argc, char** argv) {
     float blur_5x5_mask_sep[] = { 1.0f / 16.0f, 4.0f / 16.0f, 6.0f / 16.0f, 4.0f / 16.0f, 1.0f / 16.0f };
 
     std::vector<std::tuple<std::string, std::string, std::function<void()>>> operations;
-    operations.push_back({ "Copy (Host to Device)", "", [&] { vglClUpload(img); } });
-    operations.push_back({ "Copy (Device to Host)", "", [&] { vglClDownload(img); } });
-    operations.push_back({ "Copy (Device to Device)", "copy", [&] { vglClCopy(img, out); } });
+    operations.push_back({ "Upload", "", [&] { vglClUpload(img); } });
+    operations.push_back({ "Download", "", [&] { vglClDownload(img); } });
+    operations.push_back({ "Copy", "copy", [&] { vglClCopy(img, out); } });
     operations.push_back({ "Invertion", "invert", [&] { vglClInvert(img, out); } });
     operations.push_back({ "Grayscale", "grayscale", [&] { vglClGrayscale(img, out); } });
     operations.push_back({ "Threshold", "threshold", [&] { vglClThreshold(img, out, 0.5); } });
