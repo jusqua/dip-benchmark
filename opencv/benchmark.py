@@ -38,43 +38,11 @@ def measure_time(func: Callable[[], Any], rounds: int) -> tuple[float, float]:
     return (time_end_once - time_start_once, time_end_times - time_start_times)
 
 
-def perform_benchmark(image: np.ndarray, filename: str, dir: str, rounds: int, use_opencl: bool):
-    # Try to enable OpenCL
-    opencl_enabled = False
-    if cv.ocl.haveOpenCL() and use_opencl:
-        try:
-            cv.ocl.setUseOpenCL(True)
-            # Test OpenCL with a simple operation
-            test_umat = cv.UMat(image)  # type: ignore
-            cv.blur(test_umat, (3, 3))
-            opencl_enabled = True
+def perform_benchmark(image: np.ndarray, filename: str, dir: str, rounds: int):
+    work_image = cv.UMat(image)  # type: ignore
+    aux = cv.UMat(image)  # type: ignore
+    sample = cv.UMat(image)  # type: ignore
 
-            # Get device info
-            try:
-                device = cv.ocl.Device.getDefault()
-                print(f"Device: {device.name()}")
-            except:
-                print("OpenCL device info unavailable")
-
-        except Exception as e:
-            print(f"OpenCL initialization failed: {e}")
-            cv.ocl.setUseOpenCL(False)
-            opencl_enabled = False
-
-    if not opencl_enabled:
-        print("Using CPU processing")
-
-    # Prepare working images
-    if opencl_enabled:
-        work_image = cv.UMat(image)  # type: ignore
-        aux = cv.UMat(image)  # type: ignore
-        sample = cv.UMat(image)  # type: ignore
-    else:
-        work_image = image
-        aux = image.copy()
-        sample = image.copy()
-
-    # Create kernels
     cross_mask = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=np.uint8)
     square_mask = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=np.uint8)
     square_mask_sep_1x3 = np.array([[1, 1, 1]], dtype=np.uint8)
@@ -143,15 +111,20 @@ def perform_benchmark(image: np.ndarray, filename: str, dir: str, rounds: int, u
         time_once, time_rounds = measure_time(func, rounds)
         print(f"| {description: <{biggest_description_length}} | {time_once:10.6f}s (once) | {time_rounds:10.6f}s ({rounds} times) |")
 
-        # Convert to numpy array for saving if necessary
-        if opencl_enabled and hasattr(sample, 'get'):
-            output_image = sample.get()  # type: ignore
-        else:
-            output_image = sample
+        output_image = sample.get()  # type: ignore
         cv.imwrite(os.path.join(dir, f"{prefix}-{filename}"), output_image)
 
 
 def main():
+    if cv.ocl.haveOpenCL():
+        cv.ocl.setUseOpenCL(True)
+        try:
+            device = cv.ocl.Device.getDefault()
+            print(f"Device: {device.name()}")
+        except:
+            print("No GPU device found")
+            return
+
     parser = ArgumentParser(
         prog="benchmark.py", description="Image processing algorithms benchmark with OpenCL acceleration"
     )
@@ -161,22 +134,15 @@ def main():
     parser.add_argument(
         "--rounds", type=int, default=10000, help="Times to be executed, default 10000"
     )
-    parser.add_argument(
-        "--no-opencl", action="store_true", help="Disable OpenCL acceleration"
-    )
 
     args = parser.parse_args()
-
-    # Disable OpenCL if requested
-    if args.no_opencl:
-        cv.ocl.setUseOpenCL(False)
 
     image: np.ndarray = args.infile[0]
     filename: str = args.infile[1]
     dir: str = args.outdir
     rounds: int = args.rounds
 
-    perform_benchmark(image, filename, dir, rounds, not args.no_opencl)
+    perform_benchmark(image, filename, dir, rounds)
 
 
 if __name__ == "__main__":
