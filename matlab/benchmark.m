@@ -1,12 +1,10 @@
 function benchmark(infile, outdir, rounds)
-    % Force forward compatibility for CUDA
     parallel.gpu.enableCUDAForwardCompatibility(true);
 
     if nargin < 3
         rounds = 10000;
     end
 
-    % Check GPU availability
     try
         gpu = gpuDevice();
         fprintf('Using GPU: %s\n', gpu.Name);
@@ -14,7 +12,6 @@ function benchmark(infile, outdir, rounds)
         error('GPU device not available');
     end
 
-    % Read input image
     if ~exist(infile, 'file')
         error('Input file does not exist');
     end
@@ -24,10 +21,7 @@ function benchmark(infile, outdir, rounds)
     [~, name, ext] = fileparts(filename);
     outputBase = fullfile(outdir, [name ext]);
 
-    % Define processing kernels
     [cross, square, square_sep_1x3, square_sep_3x1, blur3, blur5, blur3_1x3, blur3_3x1, blur5_1x5, blur5_5x1] = createKernels();
-
-    % Define operations with descriptions matching Python
     operations = {
         {@() uploadOperation(img), 'Upload', ''};
         {@() downloadOperation(gpuImg), 'Download', ''};
@@ -48,7 +42,6 @@ function benchmark(infile, outdir, rounds)
         {@() gaussOperation(gpuImg), 'Gaussian Blur (3x3 Kernel)', 'gaussian-blur-3x3'};
     };
 
-    % Find the longest description for formatting
     maxDescLength = 0;
     for i = 1:size(operations, 1)
         descLength = length(operations{i}{2});
@@ -57,7 +50,6 @@ function benchmark(infile, outdir, rounds)
         end
     end
 
-    % Benchmark pipeline
     for i = 1:size(operations, 1)
         procFunc = operations{i}{1};
         description = operations{i}{2};
@@ -77,15 +69,12 @@ function benchmark(infile, outdir, rounds)
 end
 
 function [cross, square, square_sep_1x3, square_sep_3x1, blur3, blur5, blur3_1x3, blur3_3x1, blur5_1x5, blur5_5x1] = createKernels()
-    % Create processing kernels matching Python implementation
     cross = strel('arbitrary', [0 1 0; 1 1 1; 0 1 0]);
     square = strel('arbitrary', [1 1 1; 1 1 1; 1 1 1]);
 
-    % Separated kernels for morphological operations
     square_sep_1x3 = strel('arbitrary', [1 1 1]);
     square_sep_3x1 = strel('arbitrary', [1; 1; 1]);
 
-    % Gaussian blur kernels - double precision to match Python float32
     blur3 = gpuArray(double([1  2  1;
                             2  4  2;
                             1  2  1]/16));
@@ -96,7 +85,6 @@ function [cross, square, square_sep_1x3, square_sep_3x1, blur3, blur5, blur3_1x3
                             4 16 24 16 4;
                             1  4  6  4 1]/256));
 
-    % Separated Gaussian blur kernels
     blur3_1x3 = gpuArray(double([1/4, 1/2, 1/4]));
     blur3_3x1 = gpuArray(double([1/4; 1/2; 1/4]));
 
@@ -105,12 +93,9 @@ function [cross, square, square_sep_1x3, square_sep_3x1, blur3, blur5, blur3_1x3
 end
 
 function [img, filename] = readImage(path)
-    % Read and validate image
     img = imread(path);
-
-    % Extract filename using MATLAB's fileparts
     [~, name, ext] = fileparts(path);
-    filename = [name ext]; % Combine name and extension
+    filename = [name ext];
 end
 
 function [onceTime, totalTime, result] = measureTime(operation, rounds)
@@ -128,24 +113,19 @@ function [onceTime, totalTime, result] = measureTime(operation, rounds)
 end
 
 function saveResult(result, basePath, opName)
-    % Save processed image to file
     cpuResult = gather(result);
 
-    % Ensure proper path formatting
     basePath = convertStringsToChars(basePath);
     if iscell(basePath)
         basePath = basePath{1};
     end
 
-    % Split base path into components
     [fpath, fname, fext] = fileparts(basePath);
 
-    % Default to PNG format if no extension
     if isempty(fext)
-        fext = '.png';  % Set default extension
+        fext = '.png';
     end
 
-    % Construct valid output path
     newFilename = [opName '-' fname fext];
     if isempty(fpath)
         outputPath = newFilename;
@@ -153,12 +133,10 @@ function saveResult(result, basePath, opName)
         outputPath = fullfile(fpath, newFilename);
     end
 
-    % Ensure output directory exists
     if ~isempty(fpath) && ~exist(fpath, 'dir')
         mkdir(fpath);
     end
 
-    % Verify image data type
     if ~isfloat(cpuResult)
         cpuResult = im2double(cpuResult);
     end
@@ -176,7 +154,6 @@ function y = copyOperation(x), y = x; end
 function y = inversionOperation(x), y = imcomplement(x); end
 
 function y = grayscaleOperation(x)
-    % Convert to grayscale and back to 3-channel to match Python behavior
     gray = rgb2gray(x);
     y = cat(3, gray, gray, gray);
 end
