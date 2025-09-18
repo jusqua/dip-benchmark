@@ -181,10 +181,7 @@ function y = grayscaleOperation(x)
 end
 
 function y = thresholdOperation(x)
-    % Convert to grayscale first, then threshold
-    gray = rgb2gray(x);
-    thresh = gray > (127/255);  % Normalized threshold
-    y = cat(3, thresh, thresh, thresh);
+    y = x >= 128;
 end
 
 function y = erodeOperation(x, se), y = imerode(x, se); end
