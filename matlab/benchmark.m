@@ -63,13 +63,16 @@ function benchmark(infile, outdir, rounds)
         description = operations{i}{2};
         opName = operations{i}{3};
 
-        [onceTime, totalTime] = timeOperation(procFunc, rounds);
-        saveResult(procFunc(), outputBase, opName);
-
-        % Format output to match Python exactly
+        [onceTime, totalTime, result] = measureTime(procFunc, rounds);
         paddedDesc = sprintf('%-*s', maxDescLength, description);
         fprintf('| %s | %10.6fs (once) | %10.6fs (%d times) |\n', ...
-                paddedDesc, onceTime, totalTime, rounds);
+            paddedDesc, onceTime, totalTime, rounds);
+
+        if isempty(opName)
+            continue
+        end 
+
+        saveResult(result, outputBase, opName);
     end
 end
 
@@ -110,12 +113,7 @@ function [img, filename] = readImage(path)
     filename = [name ext]; % Combine name and extension
 end
 
-function [onceTime, totalTime] = timeOperation(operation, rounds)
-    % Time operation execution
-    tic; % Warm-up
-    operation();
-    wait(gpuDevice);
-
+function [onceTime, totalTime, result] = measureTime(operation, rounds)
     tic;
     result = operation();
     wait(gpuDevice);
