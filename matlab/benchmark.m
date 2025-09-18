@@ -19,11 +19,8 @@ function benchmark(infile, outdir, rounds)
         error('Input file does not exist');
     end
     [img, filename] = readImage(infile);
-
-    % Prepare GPU data
     gpuImg = gpuArray(img);
-    aux = gpuArray(zeros(size(img), 'like', img));
-    sample = gpuArray(zeros(size(img), 'like', img));
+
     [~, name, ext] = fileparts(filename);
     outputBase = fullfile(outdir, [name ext]);
 
@@ -40,14 +37,14 @@ function benchmark(infile, outdir, rounds)
         {@() thresholdOperation(gpuImg), 'Threshold', 'threshold'};
         {@() erodeOperation(gpuImg, cross), 'Erosion (3x3 Cross Kernel)', 'erosion-cross'};
         {@() erodeOperation(gpuImg, square), 'Erosion (3x3 Square Kernel)', 'erosion-square'};
-        {@() erodeSeparatedOperation(gpuImg, square_sep_1x3, square_sep_3x1, aux), 'Erosion (1x3+3x1 Square Kernel)', 'erosion-square-separated'};
+        {@() erodeSeparatedOperation(gpuImg, square_sep_1x3, square_sep_3x1), 'Erosion (1x3+3x1 Square Kernel)', 'erosion-square-separated'};
         {@() dilateOperation(gpuImg, cross), 'Dilation (3x3 Cross Kernel)', 'dilation-cross'};
         {@() dilateOperation(gpuImg, square), 'Dilation (3x3 Square Kernel)', 'dilation-square'};
-        {@() dilateSeparatedOperation(gpuImg, square_sep_1x3, square_sep_3x1, aux), 'Dilation (1x3+3x1 Square Kernel)', 'dilation-square-separated'};
+        {@() dilateSeparatedOperation(gpuImg, square_sep_1x3, square_sep_3x1), 'Dilation (1x3+3x1 Square Kernel)', 'dilation-square-separated'};
         {@() convOperation(gpuImg, blur3), 'Convolution (3x3 Gaussian Blur Kernel)', 'convolution-gaussian-blur-3x3'};
-        {@() convSeparatedOperation(gpuImg, blur3_1x3, blur3_3x1, aux), 'Convolution (1x3+3x1 Gaussian Blur Kernel)', 'convolution-gaussian-blur-3x3-separated'};
+        {@() convSeparatedOperation(gpuImg, blur3_1x3, blur3_3x1), 'Convolution (1x3+3x1 Gaussian Blur Kernel)', 'convolution-gaussian-blur-3x3-separated'};
         {@() convOperation(gpuImg, blur5), 'Convolution (5x5 Gaussian Blur Kernel)', 'convolution-gaussian-blur-5x5'};
-        {@() convSeparatedOperation(gpuImg, blur5_1x5, blur5_5x1, aux), 'Convolution (1x5+5x1 Gaussian Blur Kernel)', 'convolution-gaussian-blur-5x5-separated'};
+        {@() convSeparatedOperation(gpuImg, blur5_1x5, blur5_5x1), 'Convolution (1x5+5x1 Gaussian Blur Kernel)', 'convolution-gaussian-blur-5x5-separated'};
         {@() gaussOperation(gpuImg), 'Gaussian Blur (3x3 Kernel)', 'gaussian-blur-3x3'};
     };
 
@@ -194,24 +191,18 @@ function y = erodeOperation(x, se), y = imerode(x, se); end
 
 function y = dilateOperation(x, se), y = imdilate(x, se); end
 
-function y = erodeSeparatedOperation(x, se1, se2, aux)
-    % Separated erosion: apply se1 then se2
-    aux = imerode(x, se1);
-    y = imerode(aux, se2);
+function y = erodeSeparatedOperation(x, se1, se2)
+    y = imerode(imerode(x, se1), se2);
 end
 
-function y = dilateSeparatedOperation(x, se1, se2, aux)
-    % Separated dilation: apply se1 then se2
-    aux = imdilate(x, se1);
-    y = imdilate(aux, se2);
+function y = dilateSeparatedOperation(x, se1, se2)
+    y = imdilate(imdilate(x, se1), se2);
 end
 
 function y = convOperation(x, k), y = imfilter(x, k, 'conv'); end
 
-function y = convSeparatedOperation(x, k1, k2, aux)
-    % Separated convolution: apply k1 then k2
-    aux = imfilter(x, k1, 'conv');
-    y = imfilter(aux, k2, 'conv');
+function y = convSeparatedOperation(x, k1, k2)
+    y = imfilter(imfilter(x, k1, 'conv'), k2, 'conv');
 end
 
 function y = gaussOperation(x), y = imgaussfilt(x, 0.5, 'FilterSize', 3); end
