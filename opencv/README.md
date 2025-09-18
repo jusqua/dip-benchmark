@@ -9,9 +9,8 @@ This project uses [uv](https://docs.astral.sh/uv/) to handle dependencies.
 - `IMAGEFILE`: Path to the input image file
 - `FOLDERPATH`: Directory where processed images will be saved
 - `--rounds`: Number of iterations for timing measurements (default: 10000)
-- `--no-opencl`: Disable OpenCL acceleration and use CPU only
 
 ```shell
 uv sync
-uv run benchmark.py [IMAGEFILE] [FOLDERPATH] [--rounds [NROUNDS]] [--no-opencl]
+uv run benchmark.py [IMAGEFILE] [FOLDERPATH] [--rounds [NROUNDS]]
 ```
