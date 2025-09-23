@@ -8,16 +8,6 @@ using StaticArrays
 
 const BLOCK_SIZE = 16
 
-@inline function copy_kernel!(input, output, width, height, num_channels, block_size)
-    c = threadIdx().x
-    x = (blockIdx().x - 1) * block_size + threadIdx().y
-    y = (blockIdx().y - 1) * block_size + threadIdx().z
-    if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
-    
-    output[c, x, y] = input[c, x, y]
-    return
-end
-
 @inline function inversion_kernel!(input, output, width, height, num_channels, block_size)
     c = threadIdx().x
     x = (blockIdx().x - 1) * block_size + threadIdx().y
@@ -194,14 +184,15 @@ function measure_time(func, rounds)
 end
 
 function perform_benchmark(image, filename, outdir, rounds)
-    input = channelview(image)
-    d_input = CuArray{Float32}(input)
+    imageview = channelview(image)
+    input = Float32.(imageview)
+    d_input = CuArray(input)
     d_output = similar(d_input)
     d_aux = similar(d_input)
 
-    num_channels = size(input, 1)
-    width = size(input, 2)
-    height = size(input, 3)
+    num_channels = size(imageview, 1)
+    width = size(imageview, 2)
+    height = size(imageview, 3)
     threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE))
 
@@ -234,13 +225,13 @@ function perform_benchmark(image, filename, outdir, rounds)
 
     operations = [
         ("Upload", nothing, () -> begin
-            CuArray(image);
+            copyto!(d_input, input)
         end),
         ("Download", nothing, () -> begin
-            Array(d_input);
+            copyto!(input, d_input)
         end),
         ("Copy", "copy", () -> begin
-            @cuda blocks = blocks threads = threads copy_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE)
+            copyto!(d_output, d_input)
         end),
         ("Inversion", "inversion", () -> begin
             @cuda blocks = blocks threads = threads inversion_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE)
