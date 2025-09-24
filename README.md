@@ -37,7 +37,9 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 
 ![Memory operations plot](assets/memory-operations.png)
 ![Point operations plot](assets/point-operations.png)
-![Kernel passing operations plot](assets/kernel-operations.png)
+![Window erosion operations plot](assets/erosion-operations.png)
+![Window convolution 3x3 operations plot](assets/convolution-3x3-operations.png)
+![Window convolution 5x5 operations plot](assets/convolution-5x5-operations.png)
 
 #### [Julia + CUDA.jl](cuda/)
 
