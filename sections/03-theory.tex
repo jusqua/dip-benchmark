@@ -2,6 +2,27 @@
 
 Nesta seção, serão aprensentados conceitos e ferramentas que foram utilizadas no desenvolvimento da pesquisa. Serão abordados conceitos de paralelismo, arquiteturas heterogênias, operadores de processamento de imagens, modelos de programação paralela, em específico CUDA e SYCL, e brevemente sobre frameworks e bibliotecas relevantes para o tema. Esses conceitos mostram o estado da arte na área de computação paralela e processamento de imagens, fornecendo a base teórica necessária para compreender o desenvolvimento do trabalho.
 
+\subsection{CPU e modelo de execução}
+
+A Unidade Central de Processamento (CPU, do inglês \textit{Central Processing Unit}) é responsável por executar instruções de programas. Em arquiteturas com um único núcleo, a execução é essencialmente sequencial; arquiteturas com múltiplos núcleos permitem execução física simultânea de instruções. Essas características de hardware definem capacidades e limitações para paralelização de tarefas~\cite{ArpaciDusseau23}.
+
+\subsection{Sistema operacional e concorrência}
+
+O sistema operacional gerencia a execução de processos e threads através de políticas de escalonamento (do inglês \textit{scheduling}) e troca de contexto (do inglês \textit{context switch}), permitindo que múltiplos processos aparentem ser executados simultaneamente mesmo em hardware com poucos núcleos. Esse comportamento é comumente denominado concorrência e é essencial para responsividade e compartilhamento de recursos~\cite{ArpaciDusseau23}.
+
+\subsection{Processos e threads}
+
+Um processo é uma instância de um programa em execução com seu próprio espaço de endereçamento. \textit{Threads} são unidades de execução dentro de um processo que compartilham memória e recursos, o que facilita a comunicação mas exige mecanismos de sincronização como \textit{locks} e \textit{barriers} para evitar condições de corrida~\cite{ArpaciDusseau23}.
+
+\subsection{Concorrência \textit{versus} paralelismo}
+
+Concorrência descreve a gestão de múltiplas tarefas que progridem simultaneamente em nível lógico; paralelismo refere-se à execução física simultânea de várias tarefas permitidas pela unidade de processamento. O número de \textit{threads} que pode ser escalonado de forma eficiente depende tanto do sistema operacional quanto da arquitetura de hardware. Exceder esses recursos faz com que as \textit{threads} concorram por CPU, memória e cache, aumentando trocas de contexto e, em muitos casos, degradando o desempenho~\cite{ArpaciDusseau23,stallings15computer}.
+
 \subsection{Programação paralela}
 
-De forma simples, o principal objetivo da programação paralela é computar algo mais rapidamente, um processo é dado paralelo quando uma tarefa é dividida em pequenas partes que são executadas simultaneamente com o intuito de acelerar a execução desta tarefa~\cite{ArpaciDusseau23}, o que aproveita melhor os recursos disponíveis do dispositivo. A programação paralela é especialmente útil para tarefas que envolvem grandes volumes de dados ou cálculos complexos, onde a divisão do trabalho pode levar a melhorias significativas no desempenho.
+De forma simples, o principal objetivo da programação paralela é computar algo mais rapidamente, um processo é dado paralelo quando uma tarefa é dividida em pequenas partes que são executadas simultaneamente com o intuito de acelerar a execução desta tarefa~\cite{ArpaciDusseau23,james23dpcpp}. A programação paralela é especialmente útil para tarefas que envolvem grandes volumes de dados ou cálculos complexos, onde a divisão do trabalho pode levar a melhorias significativas no desempenho.
+
+\subsection{Modelos de paralelismo}
+
+Dois padrões recorrentes são o \emph{data parallelism} uma única tarefa é aplicada para todas as \textit{threads}, e o \emph{task parallelism} as \textit{threads} são distribuidas para múltiplas tarefas~\cite{james23dpcpp}. Esses modelos orientam a escolha de algoritmos e frameworks de programação paralela.
+Será dado ênfase no \emph{data parallelism}, pois é o modelo mais adequado para o processamento de imagens, que é o foco deste trabalho.
