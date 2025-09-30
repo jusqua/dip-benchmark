@@ -1,0 +1,15 @@
+\section{Introdução}
+
+O aumento da demanda por maior desempenho computacional, especialmente em áreas que requer processamento de grande volume de dados em diversas estruturas, levou ao crescente uso de arquiteturas heterogêneas como CPUs (do inglês \textit{Central Processing Unit}), GPUs (do inglês \textit{Graphics Processing Unit}) e aceleradores diversos. A diversidade de arquiteturas contém desafios para portabilidade de ferramentas computacionais.
+
+O \textit{framework} proprietário CUDA~\cite{cuda2008} promove uma API (do inglês \textit{Application Programming Interface}) para desenvolvimento de programas com processamento paralelo em dispositivos de GPU específicos da fabricante NVIDIA. Utilizaremos a linguagem de programação Julia como o pacote CUDA.jl~\cite{besard2018juliagpu} para produzir algoritmos de processamento de imagens.
+
+O \textit{framework} SYCL~\cite{sycl2020} apresenta uma camada de abstração de que permite o desenvolvimento de programas para processamento heterogêneo na linguagem C++ com APIs para trabalhar CPUs, GPUs e FPGAs. Em nosso estudo utilizamos AdaptiveCPP~\cite{acpp}, uma implementação da especificação SYCL, para analisar a viabilidade para processamento de imagens médicas.
+
+A ferramenta MATLAB desenvolvida pela \citeauthor{matlab2025} utiliza um linguagem programação própria que permite a criação de algoritmos e modelos matemáticos e conta com funções integradas para processamento de imagens em GPUs NVIDIA.
+
+A biblioteca OpenCV~\cite{opencv2000} conta com funções integradas para processamento de imagens e manipulação de imagens em CPU, mas também conta com estruturas para processamento em GPUs utilizando OpenCL e CUDA. Utilizaremos a biblioteca por meio da linguagem de programação Python na versão 3 para aplicarmos os algoritmos desenvolvidos.
+
+A biblioteca VisionGL~\cite{visiongl} expõe funções para processamento paralelo de imagens 2D e 3D~\cite{Dantas2015opencl} utiliza o \textit{framework} OpenCL~\cite{opencl2025} para acesso a arquiteturas heterogêneas compatíveis.
+
+Utilizaremos os algorítmos apresentados em \citeauthor{Dantas2015opencl} para compararmos o desempenho dos operadores de processamento de imagens e os resultados obtidos.
