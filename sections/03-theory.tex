@@ -4,7 +4,7 @@ Nesta seção, serão apresentados conceitos e ferramentas que foram utilizadas 
 
 \subsection{CPU e modelo de execução}
 
-A Unidade Central de Processamento (CPU, do inglês \textit{Central Processing Unit}) é responsável por executar instruções de programas. Em arquiteturas com um único núcleo, a execução é essencialmente sequencial; arquiteturas com múltiplos núcleos permitem execução física simultânea de instruções. Essas características de hardware definem capacidades e limitações para paralelização de tarefas~\cite{ArpaciDusseau23}.
+A Unidade Central de Processamento (CPU, do inglês \textit{Central Processing Unit}) é responsável por executar instruções de programas. Em arquiteturas com um único núcleo, a execução é essencialmente sequencial; arquiteturas com múltiplos núcleos permitem execução física simultânea de instruções. Essas características de hardware definem capacidades e limitações para paralelização de tarefas~\cite{ArpaciDusseau23,pacheco11}.
 
 \subsection{Sistema operacional e concorrência}
 
@@ -24,21 +24,22 @@ De forma simples, o principal objetivo da programação paralela é computar alg
 
 \subsection{Modelos de paralelismo}
 
-Dois padrões recorrentes são o \textit{data parallelism} uma única tarefa é aplicada para todas as \textit{threads}, e o \emph{task parallelism} as \textit{threads} são distribuídas para múltiplas tarefas~\cite{james23dpcpp}. Esses modelos orientam a escolha de algoritmos e frameworks de programação paralela.
+Dois padrões recorrentes são o \textit{data parallelism} uma única tarefa é aplicada para todas as \textit{threads}, e o \textit{task parallelism} as \textit{threads} são distribuídas para múltiplas tarefas~\cite{pacheco11}. Esses modelos orientam a escolha de algoritmos e frameworks de programação paralela.
 Será dado ênfase no \textit{data parallelism}, pois é o modelo mais adequado para o processamento de imagens, um dos focos deste trabalho.
 
 \subsection{GPU}
 
-As Unidades de Processamento Gráfico (GPU, do inglês \textit{Graphics Processing Unit}) são dispositivos especializados em calcular operações matemáticas em paralelo. Originalmente foram projetadas para acelerar o processamento gráfico em aplicações visuais, renderização de gráficos 3D, processamento de vídeos e jogos eletrônicos.
+As Unidades de Processamento Gráfico (GPU, do inglês \textit{Graphics Processing Unit}) são dispositivos especializados em calcular operações matemáticas em paralelo. Originalmente foram projetadas para acelerar o processamento gráfico em aplicações visuais, renderização de gráficos 3D; processamento de imagens, vídeos e jogos eletrônicos~\cite{gonzalez17}.
 
-Enquanto uma CPU opera instruções sequencialmente, uma GPU contêm uma arquitetura altamente paralelizável para computar uma instrução em múltiplos dados (SIMD, do inglês \textit{Single Instruction, Multiple Data})~\cite{stallings15computer,nickolls2008}.
+Enquanto uma CPU contêm núcleos de processamento "complexos" que operam instruções sequencialmente, uma GPU tem uma arquitetura altamente paralelizável para computar uma instrução em múltiplos dados (SIMD, do inglês \textit{Single Instruction, Multiple Data}) com até dezenas de milhares de núcleos processamento "simples"~\cite{nickolls2008}. Um exemplo é demonstrado na \Cref{fig:gpu-cpu-comparation}, onde a área de silício dedicada ao processamento em uma GPU é significativamente maior do que em uma CPU, refletindo sua capacidade de paralelismo massivo~\cite{stallings15computer}.
 
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.8\linewidth]{images/gpu-cpu-comparation.png}
-  \caption{CPU \textit{versus} GPU. Imagem adaptada de~\cite{stallings15computer}.}
+	\centering
+	\includegraphics[width=0.8\linewidth]{images/gpu-cpu-comparation.png}
+	\caption{CPU \textit{versus} GPU Área de Silício/Dedicação de Transistores. Imagem adaptada de~\cite{stallings15computer}.}
+	\label{fig:gpu-cpu-comparation}
 \end{figure}
 
 GPUs passaram a ser usadas para computação de propósito geral (GPGPU, do inglês, \textit{General Purpose Graphics Processing Unit}) em aplicações com algorítimos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizados de máquina.
 
-Embora GPUs entreguem alta transferência e processamento de dados (do inglês, \textit{throughput}), há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação. Nas seções seguintes aprofundamos modelos de programação específicos (CUDA e SYCL) e frameworks relevantes.
+Embora GPUs entreguem alta transferência e processamento de dados (do inglês, \textit{throughput}), há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação. Esse problema fará parte de nossa análise neste trabalho.
