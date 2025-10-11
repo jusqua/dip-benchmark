@@ -45,3 +45,9 @@ Enquanto uma CPU contêm núcleos de processamento mais complexos que operam ins
 GPUs passaram a ser usadas para computação de propósito geral (GPGPU, do inglês, \textit{General Purpose Graphics Processing Unit}) em aplicações com algorítimos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizados de máquina.
 
 Embora GPUs entreguem alta transferência e processamento de dados (do inglês, \textit{throughput}), há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação. Esse problema fará parte de nossa análise neste trabalho.
+
+Para que seja possível produzir programas utilizando GPU, tanto o dispositívo  deve suportar as operações presentes nas especificações modelo expecífico quanto o controlador do sistema operacional deve disponibilizar a API (do inglês, \textit{Application Programming Interface}) para que o desenvolvedor possar fazer uso.
+
+A Khronos Group é a principal responsável pelas especificações atuais de comunicação com GPU, mas existem APIs específicas para dispositívos e sistemas operacionais. Será dado foco ao CUDA (desenvolvido pela NVIDIA), OpenCL e SYCL (desenvolvido pela Khronos Group) nas seções posteriores.
+
+\subsubsection{Kernel}
