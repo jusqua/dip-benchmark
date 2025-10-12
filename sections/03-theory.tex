@@ -54,8 +54,66 @@ SIMT (do inglês, \textit{Single Instructions, Multiple Threads}) é um subconju
 
 \subsection{Imagem digital}
 
-Uma imagem digital é uma representação bidimensional de uma cena ou objeto, composta por uma matriz de píxeis (do inglês, \textit{picture elements}). Cada píxel contém informações sobre cor e intensidade, que podem ser representadas em diferentes formatos, como RGB (vermelho, verde, azul) ou escala de cinza~\cite{gonzalez17}.
+Uma imagem digital é uma representação bidimensional de uma cena ou objeto, composta por uma matriz de píxeis (do inglês, \textit{picture elements}). Cada píxel contém informações sobre cor e intensidade, que podem ser representadas em diferentes formatos, como RGB (vermelho, verde, azul), RGBA (RGB com fator de transparência Alpha) ou escala de cinza~\cite{gonzalez17}.
 
 \subsection{Processamento de imagens digitais}
 
 Imagens armazenam informações visuais que podem ser processadas e analisadas por funções matemáticas por computadores para, por exemplo, melhorar a visibilidade, extrair características ou preparar para análise posterior.
+
+Imagens com 2D podem ser representadas como uma matriz \(I\) de tamanho \(M \times N\), onde \(M\) é o número de linhas (altura) e \(N\) é o número de colunas (largura). Cada elemento \(I(i,j)\) da matriz representa o valor do píxel na posição \((i,j)\). Em imagens em escala de cinza, esse valor é um número entre 0 (preto) e 1 (branco). Em imagens coloridas, cada píxel pode ser representado por três ou quatro valores correspondentes aos canais RGB e RGBA, respectivamente.
+
+Nas subseções seguintes será descrito alguns conceitos essenciais para o desenvolvimento de operadores para esta pesquisa.
+
+\subsubsection{Operações pontuais e matriciais}
+
+Uma operação é dada pontual quando processa os dados de cada píxel da imagem resultante sem depender de dados vizinhos, já uma operação é dada matricial quando processa os dados de cada píxel da imagem utilizando uma janela (matriz) baseado nos dados de píxeis vizinhos para aplicar alteração no píxel alvo.
+Para exemplificar considere as seguintes imagens (matrizes):
+\[
+\begin{bmatrix}
+    a_{11} & a_{12} \\
+    a_{21} & a_{22} \\
+\end{bmatrix}
+\text{e}
+\begin{bmatrix}
+    b_{11} & b_{12} \\
+    b_{21} & b_{22} \\
+\end{bmatrix}
+\]
+\noindent O produto pontual das imagens (denotado pelo símbolo $\odot$ ou $\otimes$) é formado multiplicado os elementos homólogos (de mesmo índice):
+\[
+\begin{bmatrix}
+    a_{11} & a_{12} \\
+    a_{21} & a_{22} \\
+\end{bmatrix}
+\odot
+\begin{bmatrix}
+    b_{11} & b_{12} \\
+    b_{21} & b_{22} \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+    a_{11}b_{11} & a_{12}b_{12} \\
+    a_{21}b_{21} & a_{22}b_{22} \\
+\end{bmatrix}
+\]
+\noindent O produto matricial das imagens é formado usando a regra da multiplicação de matrizes:
+\[
+\begin{bmatrix}
+    a_{11} & a_{12} \\
+    a_{21} & a_{22} \\
+\end{bmatrix}
+\begin{bmatrix}
+    b_{11} & b_{12} \\
+    b_{21} & b_{22} \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+    a_{11}b_{11}+a_{12}b_{21} & a_{11}b_{12}+a_{12}b_{22} \\
+    a_{21}b_{11}+a_{22}b_{21} & a_{21}b_{12}+a_{22}b_{22} \\
+\end{bmatrix}
+\]
+
+\subsubsection{Operações lineares e não-lineares}
+
+
+\subsubsection{Operações morfológicas}
