@@ -46,8 +46,16 @@ GPUs passaram a ser usadas para computação de propósito geral (GPGPU, do ingl
 
 Embora GPUs entreguem alta transferência e processamento de dados (do inglês, \textit{throughput}), há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação. Esse problema fará parte de nossa análise neste trabalho.
 
-Para que seja possível produzir programas utilizando GPU, tanto o dispositívo  deve suportar as operações presentes nas especificações modelo expecífico quanto o controlador do sistema operacional deve disponibilizar a API (do inglês, \textit{Application Programming Interface}) para que o desenvolvedor possar fazer uso.
+Para ser possível produzir programas utilizando GPU, tanto o dispositivo  deve suportar as operações presentes nas especificações modelo específico quanto o controlador do sistema operacional deve disponibilizar a API (do inglês, \textit{Application Programming Interface}) para que o desenvolvedor possar fazer uso.
 
-A Khronos Group é a principal responsável pelas especificações atuais de comunicação com GPU, mas existem APIs específicas para dispositívos e sistemas operacionais. Será dado foco ao CUDA (desenvolvido pela NVIDIA), OpenCL e SYCL (desenvolvido pela Khronos Group) nas seções posteriores.
+\subsubsection{Modelo de execução SIMT}
 
-\subsubsection{Kernel}
+SIMT (do inglês, \textit{Single Instructions, Multiple Threads}) é um subconjunto do modelo SIMD utilizando múltiplas \textit{threads} do dispositivo para operar uma instrução única concorrentemente. O SIMT assim como os outros aspectos destacados nesta seção, são fundamentais para entender o funcionamento de GPUs e como programá-las eficientemente~\cite{nickolls2008}. Nas seções posteriores, será apresentado formas de programar com as ferramentas seguem o modelo SIMT para desenvolvimento.
+
+\subsection{Imagem digital}
+
+Uma imagem digital é uma representação bidimensional de uma cena ou objeto, composta por uma matriz de píxeis (do inglês, \textit{picture elements}). Cada píxel contém informações sobre cor e intensidade, que podem ser representadas em diferentes formatos, como RGB (vermelho, verde, azul) ou escala de cinza~\cite{gonzalez17}.
+
+\subsection{Processamento de imagens digitais}
+
+Imagens armazenam informações visuais que podem ser processadas e analisadas por funções matemáticas por computadores para, por exemplo, melhorar a visibilidade, extrair características ou preparar para análise posterior.
