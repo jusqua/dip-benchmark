@@ -4,19 +4,19 @@ Nesta seção, serão apresentados conceitos e ferramentas que foram utilizadas 
 
 \subsection{CPU}
 
-A Unidade Central de Processamento (CPU, do inglês \textit{Central Processing Unit}) é responsável por executar instruções de programas. Em arquiteturas com um único núcleo, a execução é essencialmente sequencial; arquiteturas com múltiplos núcleos permitem execução física simultânea de instruções. Essas características de hardware definem capacidades e limitações para paralelização de tarefas~\cite{ArpaciDusseau23,pacheco11}.
+A CPU é responsável por executar instruções de programas. Em arquiteturas com um único núcleo, a execução é essencialmente sequencial; arquiteturas com múltiplos núcleos permitem execução física simultânea de instruções. Essas características de hardware definem capacidades e limitações para paralelização de tarefas~\cite{ArpaciDusseau23,pacheco11}.
 
 \subsection{Sistema operacional e concorrência}
 
-O sistema operacional gerencia a execução de processos e threads mediante políticas de escalonamento (do inglês \textit{scheduling}) e troca de contexto (do inglês \textit{context switch}), permitindo que múltiplos processos aparentem ser executados simultaneamente mesmo em hardware com poucos núcleos. Esse comportamento é comumente denominado concorrência e é essencial para responsividade e compartilhamento de recursos~\cite{ArpaciDusseau23}.
+O sistema operacional gerencia a execução de processos e \textit{threads} mediante políticas de escalonamento e troca de contexto, permitindo que múltiplos processos aparentem ser executados simultaneamente mesmo em hardware com poucos núcleos. Esse comportamento é comumente denominado concorrência e é essencial para responsividade e compartilhamento de recursos~\cite{ArpaciDusseau23}.
 
 \subsubsection{Processos e threads}
 
-Um processo é uma instância de um programa em execução com seu próprio espaço de endereçamento. \textit{Threads} são unidades de execução num processo que compartilham memória e recursos, o que facilita a comunicação, mas exige mecanismos de sincronização como \textit{locks} e \textit{barriers} para evitar condições de corrida~\cite{ArpaciDusseau23}.
+Um processo é uma instância de um programa em execução com seu próprio espaço de endereçamento. \textit{Threads} são unidades de execução num processo que compartilham memória e recursos, o que facilita a comunicação, mas exige mecanismos de sincronização como travas e barreiras para evitar condições de corrida~\cite{ArpaciDusseau23}.
 
 \subsection{Programação paralela}
 
-De forma simples, o principal objetivo da programação paralela é computar algo mais rapidamente, um processo é dado paralelo quando uma tarefa é dividida em pequenas partes executadas simultaneamente com o intuito de acelerar a execução desta tarefa~\cite{ArpaciDusseau23,james23dpcpp}. A programação paralela é especialmente útil para tarefas que envolvem grandes volumes de dados ou cálculos complexos, onde a divisão do trabalho pode levar a melhorias significativas no desempenho.
+De forma simples, o principal objetivo da programação paralela é computar algo mais rapidamente. Um processo é dito paralelo quando uma tarefa é dividida em pequenas partes executadas simultaneamente com o intuito de acelerar a execução desta tarefa~\cite{ArpaciDusseau23,james23dpcpp}. A programação paralela é especialmente útil para tarefas que envolvem grandes volumes de dados ou cálculos complexos, onde a divisão do trabalho pode levar a melhorias significativas no desempenho.
 
 \subsubsection{Concorrência \textit{versus} Paralelismo}
 
@@ -24,12 +24,12 @@ Concorrência descreve a gestão de múltiplas tarefas que progridem simultaneam
 
 \subsubsection{Modelos de paralelismo}
 
-Dois padrões recorrentes são o \textit{data parallelism} uma única tarefa é aplicada para todas as \textit{threads}, e o \textit{task parallelism} as \textit{threads} são distribuídas para múltiplas tarefas~\cite{pacheco11}. Esses modelos orientam a escolha de algoritmos e frameworks de programação paralela.
-Será dado ênfase no \textit{data parallelism}, pois é o modelo mais adequado para o processamento de imagens, um dos focos deste trabalho.
+Dois padrões recorrentes são o \textit{data parallelism} e o \textit{task parallelism}. No \textit{data parallelism} uma única tarefa é aplicada para todas as \textit{threads}, já no \textit{task parallelism} as \textit{threads} são distribuídas para múltiplas tarefas~\cite{pacheco11}. Esses modelos orientam a escolha de algoritmos e frameworks de programação paralela.
+Será dada ênfase no \textit{data parallelism}, pois é o modelo mais adequado para o processamento de imagens, que é o foco deste trabalho.
 
 \subsection{GPU}
 
-As Unidades de Processamento Gráfico (GPU, do inglês \textit{Graphics Processing Unit}) são dispositivos especializados em calcular operações matemáticas em paralelo. Originalmente foram projetadas para auxiliar a CPU no processamento de gráficos, imagens, vídeos, jogos eletrônicos e entre outras aplicações~\cite{gonzalez17}.
+As GPU são dispositivos especializados em calcular operações matemáticas em paralelo. Originalmente foram projetadas para auxiliar a CPU no processamento de gráficos, imagens, vídeos, jogos eletrônicos e entre outras aplicações~\cite{gonzalez17}.
 
 Enquanto uma CPU contêm núcleos de processamento mais complexos que operam instruções sequencialmente, uma GPU tem uma arquitetura altamente paralelizável para computar uma instrução em múltiplos dados (SIMD, do inglês \textit{Single Instruction, Multiple Data}) com até dezenas de milhares de núcleos de processamento mais simples~\cite{nickolls2008}. Um exemplo é demonstrado na \Cref{fig:gpu-cpu-comparation}, onde a área de silício dedicada ao processamento em uma GPU é significativamente maior do que em uma CPU, refletindo sua capacidade de paralelismo massivo~\cite{stallings15computer}.
 
@@ -42,31 +42,32 @@ Enquanto uma CPU contêm núcleos de processamento mais complexos que operam ins
 
 \subsubsection{GPGPU}
 
-GPUs passaram a ser usadas para computação de propósito geral (GPGPU, do inglês, \textit{General Purpose Graphics Processing Unit}) em aplicações com algorítimos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizados de máquina.
+GPUs passaram a ser usadas para computação de propósito geral (GPGPU) em aplicações com algoritmos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizados de máquina.
 
-Embora GPUs entreguem alta transferência e processamento de dados (do inglês, \textit{throughput}), há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação. Esse problema fará parte de nossa análise neste trabalho.
+Embora GPUs entreguem alta transferência e processamento de dados, há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação. Esse problema fará parte de nossa análise neste trabalho.
 
-Para ser possível produzir programas utilizando GPU, tanto o dispositivo  deve suportar as operações presentes nas especificações modelo específico quanto o controlador do sistema operacional deve disponibilizar a API (do inglês, \textit{Application Programming Interface}) para que o desenvolvedor possar fazer uso.
+Para ser possível produzir programas utilizando GPU, tanto o dispositivo  deve suportar as operações presentes nas especificações modelo específico quanto o controlador do sistema operacional deve disponibilizar a API para que o desenvolvedor possar fazer uso.
 
 \subsubsection{Modelo de execução SIMT}
 
-SIMT (do inglês, \textit{Single Instructions, Multiple Threads}) é um subconjunto do modelo SIMD utilizando múltiplas \textit{threads} do dispositivo para operar uma instrução única concorrentemente. O SIMT assim como os outros aspectos destacados nesta seção, são fundamentais para entender o funcionamento de GPUs e como programá-las eficientemente~\cite{nickolls2008}. Nas seções posteriores, será apresentado formas de programar com as ferramentas seguem o modelo SIMT para desenvolvimento.
+\textit{Single Instructions, Multiple Threads} (SIMT) é um subconjunto do modelo SIMD utilizando múltiplas \textit{threads} do dispositivo para operar uma instrução única concorrentemente. O SIMT assim como os outros aspectos destacados nesta seção, são fundamentais para entender o funcionamento de GPUs e como programá-las eficientemente~\cite{nickolls2008}. Nas seções posteriores, será apresentado formas de programar com as ferramentas seguem o modelo SIMT para desenvolvimento.
 
 \subsection{Imagem digital}
 
-Uma imagem digital é uma representação bidimensional de uma cena ou objeto, composta por uma matriz de píxeis (do inglês, \textit{picture elements}). Cada píxel contém informações sobre cor e intensidade, que podem ser representadas em diferentes formatos, como RGB (vermelho, verde, azul), RGBA (RGB com fator de transparência Alpha) ou escala de cinza~\cite{gonzalez17}.
+Uma imagem digital é uma representação bidimensional de uma cena ou objeto, composta por uma matriz de píxeis (do inglês, \textit{picture elements}). Cada píxel contém informações sobre cor e intensidade, que podem ser representadas em diferentes formatos, como RGB (vermelho, verde, azul), RGBA (RGB com fator de transparência alfa) ou escala de cinza~\cite{gonzalez17}.
 
 \subsection{Processamento de imagens digitais}
 
-Imagens armazenam informações visuais que podem ser processadas e analisadas por funções matemáticas por computadores para, por exemplo, melhorar a visibilidade, extrair características ou preparar para análise posterior.
+Imagens armazenam informações visuais que podem ser processadas e analisadas por funções matemáticas por computadores para, por exemplo, melhorar a nitidez, extrair características ou preparar para análise posterior.
 
 Imagens com 2D podem ser representadas como uma matriz \(I\) de tamanho \(M \times N\), onde \(M\) é o número de linhas (altura) e \(N\) é o número de colunas (largura). Cada elemento \(I(i,j)\) da matriz representa o valor do píxel na posição \((i,j)\). Em imagens em escala de cinza, esse valor é um número entre 0 (preto) e 1 (branco). Em imagens coloridas, cada píxel pode ser representado por três ou quatro valores correspondentes aos canais RGB e RGBA, respectivamente.
 
-Nas subseções seguintes será descrito alguns conceitos essenciais para o desenvolvimento de operadores para esta pesquisa.
+Nas subseções seguintes serão descritos alguns conceitos essenciais para o desenvolvimento de operadores para esta pesquisa.
 
-\subsubsection{Operações pontuais e matriciais}
+% Revisar ----------------
+\subsubsection{Operações ponto-a-ponto e de janela}
 
-Uma operação é dada pontual quando processa os dados de cada píxel da imagem resultante sem depender de dados vizinhos, já uma operação é dada matricial quando processa os dados de cada píxel da imagem utilizando uma janela (matriz) baseado nos dados de píxeis vizinhos para aplicar alteração no píxel alvo.
+Uma operação é dita ponto-a-ponto quando processa os dados de cada píxel da imagem resultante sem depender de dados vizinhos, já uma operação é dita de janela quando processa os dados de cada píxel da imagem utilizando uma janela (matriz) baseado nos dados de píxeis vizinhos para aplicar alteração no píxel alvo.
 Para exemplificar considere as seguintes imagens (matrizes):
 \[
 \begin{bmatrix}
