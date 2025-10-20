@@ -62,59 +62,69 @@ Imagens armazenam informações visuais que podem ser processadas e analisadas p
 
 Imagens com 2D podem ser representadas como uma matriz \(I\) de tamanho \(M \times N\), onde \(M\) é o número de linhas (altura) e \(N\) é o número de colunas (largura). Cada elemento \(I(i,j)\) da matriz representa o valor do píxel na posição \((i,j)\). Em imagens em escala de cinza, esse valor é um número entre 0 (preto) e 1 (branco). Em imagens coloridas, cada píxel pode ser representado por três ou quatro valores correspondentes aos canais RGB e RGBA, respectivamente.
 
-Nas subseções seguintes serão descritos alguns conceitos essenciais para o desenvolvimento de operadores para esta pesquisa.
-
-% Revisar ----------------
-\subsubsection{Operações ponto-a-ponto e de janela}
-
-Uma operação é dita ponto-a-ponto quando processa os dados de cada píxel da imagem resultante sem depender de dados vizinhos, já uma operação é dita de janela quando processa os dados de cada píxel da imagem utilizando uma janela (matriz) baseado nos dados de píxeis vizinhos para aplicar alteração no píxel alvo.
-Para exemplificar considere as seguintes imagens (matrizes):
+Nas subseções seguintes serão descritos alguns conceitos essenciais para o desenvolvimento de operadores para esta pesquisa. Para os exemplos seguintes considere as seguintes imagens (matrizes):
 \[
-\begin{bmatrix}
-    a_{11} & a_{12} \\
-    a_{21} & a_{22} \\
-\end{bmatrix}
-\text{e}
-\begin{bmatrix}
-    b_{11} & b_{12} \\
-    b_{21} & b_{22} \\
-\end{bmatrix}
+	I_1 =
+	\begin{bmatrix}
+		a_{11} & a_{12} \\
+		a_{21} & a_{22} \\
+	\end{bmatrix}
+	;
+	I_2 =
+	\begin{bmatrix}
+		b_{11} & b_{12} \\
+		b_{21} & b_{22} \\
+	\end{bmatrix}
 \]
+
+\subsubsection{Operações pontuais e matriciais}
+
+Uma operação é dita pontual quando processa os dados de cada píxel da imagem resultante sem depender de dados vizinhos, já uma operação é dita matricial quando processa os dados de cada píxel da imagem utilizando todo o escopo da imagem aplicando transformações lineares~\cite{gonzalez17}.
 \noindent O produto pontual das imagens (denotado pelo símbolo $\odot$ ou $\otimes$) é formado multiplicado os elementos homólogos (de mesmo índice):
 \[
-\begin{bmatrix}
-    a_{11} & a_{12} \\
-    a_{21} & a_{22} \\
-\end{bmatrix}
-\odot
-\begin{bmatrix}
-    b_{11} & b_{12} \\
-    b_{21} & b_{22} \\
-\end{bmatrix}
-=
-\begin{bmatrix}
-    a_{11}b_{11} & a_{12}b_{12} \\
-    a_{21}b_{21} & a_{22}b_{22} \\
-\end{bmatrix}
+	\begin{bmatrix}
+		a_{11} & a_{12} \\
+		a_{21} & a_{22} \\
+	\end{bmatrix}
+	\odot
+	\begin{bmatrix}
+		b_{11} & b_{12} \\
+		b_{21} & b_{22} \\
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+		a_{11}b_{11} & a_{12}b_{12} \\
+		a_{21}b_{21} & a_{22}b_{22} \\
+	\end{bmatrix}
 \]
 \noindent O produto matricial das imagens é formado usando a regra da multiplicação de matrizes:
 \[
-\begin{bmatrix}
-    a_{11} & a_{12} \\
-    a_{21} & a_{22} \\
-\end{bmatrix}
-\begin{bmatrix}
-    b_{11} & b_{12} \\
-    b_{21} & b_{22} \\
-\end{bmatrix}
-=
-\begin{bmatrix}
-    a_{11}b_{11}+a_{12}b_{21} & a_{11}b_{12}+a_{12}b_{22} \\
-    a_{21}b_{11}+a_{22}b_{21} & a_{21}b_{12}+a_{22}b_{22} \\
-\end{bmatrix}
+	\begin{bmatrix}
+		a_{11} & a_{12} \\
+		a_{21} & a_{22} \\
+	\end{bmatrix}
+	\begin{bmatrix}
+		b_{11} & b_{12} \\
+		b_{21} & b_{22} \\
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+		a_{11}b_{11}+a_{12}b_{21} & a_{11}b_{12}+a_{12}b_{22} \\
+		a_{21}b_{11}+a_{22}b_{21} & a_{21}b_{12}+a_{22}b_{22} \\
+	\end{bmatrix}
 \]
+
+Quando uma operação ser apresentada nesse trabalho será considerado uma operação pontual, a menos que seja explicitamente declarado como uma operação matricial.
 
 \subsubsection{Operações lineares e não-lineares}
 
+Um operador \(L\) que atua sobre imagens é dito linear se satisfaz o princípio da superposição, isto é, se para quaisquer imagens \(I_1, I_2\) e quaisquer escalares \(a, b \in \mathbb{R}\) vale:
+\begin{enumerate}
+	\item \textbf{Aditividade:} \(L(I_1 + I_2) = L(I_1) + L(I_2)\).
+	\item \textbf{Homogeneidade:} \(L(a I_1) = a\,L(I_1)\).
+\end{enumerate}
+Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,I_2) = a\,L(I_1) + b\,L(I_2)\). Quaisquer operadores que não satisfazem essas propriedades são chamados não-lineares.
+
+\subsubsection{Operações espaciais}
 
 \subsubsection{Operações morfológicas}
