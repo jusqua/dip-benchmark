@@ -60,22 +60,7 @@ Uma imagem digital é uma representação bidimensional de uma cena ou objeto, c
 
 Imagens armazenam informações visuais que podem ser processadas e analisadas por funções matemáticas por computadores para, por exemplo, melhorar a nitidez, extrair características ou preparar para análise posterior.
 
-Imagens com 2D podem ser representadas como uma matriz \(I\) de tamanho \(M \times N\), onde \(M\) é o número de linhas (altura) e \(N\) é o número de colunas (largura). Cada elemento \(I(i,j)\) da matriz representa o valor do píxel na posição \((i,j)\). Em imagens em escala de cinza, esse valor é um número entre 0 (preto) e 1 (branco). Em imagens coloridas, cada píxel pode ser representado por três ou quatro valores correspondentes aos canais RGB e RGBA, respectivamente.
-
-Nas subseções seguintes serão descritos alguns conceitos essenciais para o desenvolvimento de operadores para esta pesquisa. Para os exemplos seguintes considere as seguintes imagens (matrizes):
-\[
-	I_1 =
-	\begin{bmatrix}
-		a_{11} & a_{12} \\
-		a_{21} & a_{22} \\
-	\end{bmatrix}
-	;
-	I_2 =
-	\begin{bmatrix}
-		b_{11} & b_{12} \\
-		b_{21} & b_{22} \\
-	\end{bmatrix}
-\]
+Imagens com 2D podem ser representadas como uma matriz \(I\) de tamanho \(M \times N\), onde \(M\) é o número de linhas (altura) e \(N\) é o número de colunas (largura). Cada elemento \(I(i,j)\) da matriz representa o valor do píxel na posição \((i,j)\). Em imagens em escala de cinza, esse valor é um número entre 0 (preto) e 1 (branco). Em imagens coloridas, cada píxel pode ser representado por três ou quatro valores correspondentes aos canais RGB e RGBA, respectivamente~\cite{gonzalez17}.
 
 \subsubsection{Operações pontuais e matriciais}
 
@@ -114,6 +99,8 @@ Uma operação é dita pontual quando processa os dados de cada píxel da imagem
 	\end{bmatrix}
 \]
 
+Produto matricial é comumente utilizado em operações de transformação geométrica, como rotação, escala e translação de imagens que é um ponto de foco para computação gráfica~\cite{gonzalez17,shirley15}.
+
 Quando uma operação ser apresentada nesse trabalho será considerado uma operação pontual, a menos que seja explicitamente declarado como uma operação matricial.
 
 \subsubsection{Operações lineares e não-lineares}
@@ -123,8 +110,47 @@ Um operador \(L\) que atua sobre imagens é dito linear se satisfaz o princípio
 	\item \textbf{Aditividade:} \(L(I_1 + I_2) = L(I_1) + L(I_2)\).
 	\item \textbf{Homogeneidade:} \(L(a I_1) = a\,L(I_1)\).
 \end{enumerate}
-Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,I_2) = a\,L(I_1) + b\,L(I_2)\). Quaisquer operadores que não satisfazem essas propriedades são chamados não-lineares.
+Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,I_2) = a\,L(I_1) + b\,L(I_2)\). Quaisquer operadores que não satisfazem essas propriedades são chamados não-lineares~\cite{gonzalez17}.
 
-\subsubsection{Operações espaciais}
+\noindent Um exemplo de operador linear é a escala de cinza, que pode ser representada como uma combinação linear dos canais RGB:
+\begin{equation}
+    I_{out}(i,j) = G(I(i,j)) = 0.299 R + 0.587 G + 0.114 B
+\end{equation}
+
+\noindent Um exemplo de operador não-linear é o limiar, que define um valor de corte para segmentar a imagem em duas classes utilizando os valores dos píxeis:
+\begin{equation}
+    I_{out}(i,j) = T(I(i,j)) =
+	\begin{cases}
+		1, & \text{se } I(i,j) \geq \text{limiar} \\
+		0, & \text{se } I(i,j) < \text{limiar}
+	\end{cases}
+\end{equation}
+
+\subsubsection{Operações ponto-a-ponto e de janela}
+
+Um operador é dito de ponto-a-ponto quando altera cada píxel da própria imagem por meio de um valor de referência para produzir a imagem resultante. Sendo assim, cada píxel da imagem resultante depende exclusivamente do valor do píxel correspondente na imagem original. Considerando uma função de transformação \(T(z)\) tem como exemplo a operação complemento ou inversão de cores, que pode ser definida como:
+\begin{equation}
+    I_{out}(i,j) = T(I_{in}(i,j)) = 1 - I_{in}(i,j)
+\end{equation}
+
+Um operador é dito de janela quando processa uma imagem considerando a vizinhança dos píxeis por meio de uma máscara ou \textit{kernel} representado pro uma matriz que é aplicado sobre a imagem original para produzir a imagem resultante. Com isso, cada píxel da imagem resultante depende dos valores dos píxeis vizinhos na imagem original. Considerando uma máscara \(K\) de tamanho \(m \times n\), a operação de convolução é um exemplo de operador de janela, definida como:
+\begin{equation}
+    I_{out}(i,j) = \sum_{u=-\lfloor m/2 \rfloor}^{\lfloor m/2 \rfloor} \sum_{v=-\lfloor n/2 \rfloor}^{\lfloor n/2 \rfloor} K(u,v) \cdot I_{in}(i+u,j+v)
+\end{equation}
 
 \subsubsection{Operações morfológicas}
+
+Operações morfológicas constituem uma família distinta de transformações que exploram a forma e a estrutura de objetos na imagem por meio de um elemento estruturante \(B\). Em imagens binárias, uma imagem pode ser vista como um conjunto \(A \subset \mathbb{Z}^2\) dos pontos (píxeis) com valor 1. As duas operações fundamentais são erosão e dilatação, definidas em termos de teoria dos conjuntos como:
+\begin{align}
+    A \ominus B &= \{ z \in \mathbb{Z}^2 \mid B_z \subseteq A \}, \\
+    A \oplus B &= \{ z \in \mathbb{Z}^2 \mid (B^\text{ref})_z \cap A \neq \emptyset \},
+\end{align}
+onde \(B_z\) denota a translação do elemento estruturante \(B\) pela posição \(z\) e \(B^\text{ref}\) é a reflexão de \(B\) (algumas definições adotam diretamente \(B\) sem reflexão, dependendo da convenção). Intuitivamente, a erosão \"encolhe\" objetos e remove pequenos artefatos, enquanto a dilatação \"expande\" objetos e preenche lacunas.
+
+A escolha do elemento estruturante — sua forma (retangular, disco, cruz, etc.) e seu tamanho — determina quais características morfológicas são preservadas ou removidas~\cite{gonzalez17}.
+
+\subsection{Modelos de programação paralela para GPU}
+
+\subsubsection{OpenCL}
+\subsubsection{CUDA}
+\subsubsection{SYCL}
