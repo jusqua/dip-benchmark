@@ -143,9 +143,9 @@ Um operador é dito de janela quando processa uma imagem considerando a vizinhan
 Operações morfológicas constituem uma família distinta de transformações que exploram a forma e a estrutura de objetos na imagem por meio de um elemento estruturante \(B\). Em imagens binárias, uma imagem pode ser vista como um conjunto \(A \subset \mathbb{Z}^2\) dos pontos (píxeis) com valor 1. As duas operações fundamentais são erosão e dilatação, definidas em termos de teoria dos conjuntos como:
 \begin{align}
     A \ominus B &= \{ z \in \mathbb{Z}^2 \mid B_z \subseteq A \}, \\
-    A \oplus B &= \{ z \in \mathbb{Z}^2 \mid (B^\text{ref})_z \cap A \neq \emptyset \},
+    A \oplus B &= \{ z \in \mathbb{Z}^2 \mid \hat{B}_z \cap A \neq \emptyset \},
 \end{align}
-onde \(B_z\) denota a translação do elemento estruturante \(B\) pela posição \(z\) e \(B^\text{ref}\) é a reflexão de \(B\) (algumas definições adotam diretamente \(B\) sem reflexão, dependendo da convenção). Intuitivamente, a erosão \"encolhe\" objetos e remove pequenos artefatos, enquanto a dilatação \"expande\" objetos e preenche lacunas.
+onde \(B_z\) denota a translação do elemento estruturante \(B\) pela posição \(z\) e \(\hat{B}\) é a reflexão de \(B\). Intuitivamente, a erosão encolhe objetos e remove pequenos artefatos, enquanto a dilatação expande objetos e preenche lacunas.
 
 A escolha do elemento estruturante — sua forma (retangular, disco, cruz, etc.) e seu tamanho — determina quais características morfológicas são preservadas ou removidas~\cite{gonzalez17}.
 
