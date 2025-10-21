@@ -2,61 +2,13 @@
 
 Nesta seção, serão apresentados conceitos e ferramentas que foram utilizadas no desenvolvimento da pesquisa. Serão abordados conceitos de paralelismo, arquiteturas heterogêneas, operadores de processamento de imagens, modelos de programação paralela, em específico CUDA e SYCL, e brevemente sobre frameworks e bibliotecas relevantes para o tema. Esses conceitos mostram o estado da arte na área de computação paralela e processamento de imagens, fornecendo a base teórica necessária para compreender o desenvolvimento do trabalho.
 
-\subsection{CPU}
+\subsection{Processamento de imagens digitais}
 
-A CPU é responsável por executar instruções de programas. Em arquiteturas com um único núcleo, a execução é essencialmente sequencial; arquiteturas com múltiplos núcleos permitem execução física simultânea de instruções. Essas características de hardware definem capacidades e limitações para paralelização de tarefas~\cite{ArpaciDusseau23,pacheco11}.
+Nesta subseção, serão apresentados conceitos básicos sobre imagens digitais, operações pontuais e matriciais, operações lineares e não-lineares, operações ponto-a-ponto e de janela, e operações morfológicas. Esses conceitos são fundamentais para entender as técnicas e algoritmos utilizados no processamento de imagens.
 
-\subsection{Sistema operacional e concorrência}
-
-O sistema operacional gerencia a execução de processos e \textit{threads} mediante políticas de escalonamento e troca de contexto, permitindo que múltiplos processos aparentem ser executados simultaneamente mesmo em hardware com poucos núcleos. Esse comportamento é comumente denominado concorrência e é essencial para responsividade e compartilhamento de recursos~\cite{ArpaciDusseau23}.
-
-\subsubsection{Processos e threads}
-
-Um processo é uma instância de um programa em execução com seu próprio espaço de endereçamento. \textit{Threads} são unidades de execução num processo que compartilham memória e recursos, o que facilita a comunicação, mas exige mecanismos de sincronização como travas e barreiras para evitar condições de corrida~\cite{ArpaciDusseau23}.
-
-\subsection{Programação paralela}
-
-De forma simples, o principal objetivo da programação paralela é computar algo mais rapidamente. Um processo é dito paralelo quando uma tarefa é dividida em pequenas partes executadas simultaneamente com o intuito de acelerar a execução desta tarefa~\cite{ArpaciDusseau23,james23dpcpp}. A programação paralela é especialmente útil para tarefas que envolvem grandes volumes de dados ou cálculos complexos, onde a divisão do trabalho pode levar a melhorias significativas no desempenho.
-
-\subsubsection{Concorrência \textit{versus} Paralelismo}
-
-Concorrência descreve a gestão de múltiplas tarefas que progridem simultaneamente ao nível lógico; paralelismo refere-se à execução física simultânea de várias tarefas permitidas pela unidade de processamento. O número de \textit{threads} que pode ser escalonado de forma eficiente depende tanto do sistema operacional quanto da arquitetura de hardware. Exceder esses recursos faz com que as \textit{threads} concorram por CPU, memória e cache, aumentando trocas de contexto e, em muitos casos, degradando o desempenho~\cite{ArpaciDusseau23,stallings15computer}.
-
-\subsubsection{Modelos de paralelismo}
-
-Dois padrões recorrentes são o \textit{data parallelism} e o \textit{task parallelism}. No \textit{data parallelism} uma única tarefa é aplicada para todas as \textit{threads}, já no \textit{task parallelism} as \textit{threads} são distribuídas para múltiplas tarefas~\cite{pacheco11}. Esses modelos orientam a escolha de algoritmos e frameworks de programação paralela.
-Será dada ênfase no \textit{data parallelism}, pois é o modelo mais adequado para o processamento de imagens, que é o foco deste trabalho.
-
-\subsection{GPU}
-
-As GPU são dispositivos especializados em calcular operações matemáticas em paralelo. Originalmente foram projetadas para auxiliar a CPU no processamento de gráficos, imagens, vídeos, jogos eletrônicos e entre outras aplicações~\cite{gonzalez17}.
-
-Enquanto uma CPU contêm núcleos de processamento mais complexos que operam instruções sequencialmente, uma GPU tem uma arquitetura altamente paralelizável para computar uma instrução em múltiplos dados (SIMD, do inglês \textit{Single Instruction, Multiple Data}) com até dezenas de milhares de núcleos de processamento mais simples~\cite{nickolls2008}. Um exemplo é demonstrado na \Cref{fig:gpu-cpu-comparation}, onde a área de silício dedicada ao processamento em uma GPU é significativamente maior do que em uma CPU, refletindo sua capacidade de paralelismo massivo~\cite{stallings15computer}.
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.8\linewidth]{images/gpu-cpu-comparation.png}
-	\caption{CPU \textit{versus} GPU Área de Silício/Dedicação de Transistores. Imagem adaptada de~\cite{stallings15computer}.}
-	\label{fig:gpu-cpu-comparation}
-\end{figure}
-
-\subsubsection{GPGPU}
-
-GPUs passaram a ser usadas para computação de propósito geral (GPGPU) em aplicações com algoritmos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizados de máquina.
-
-Embora GPUs entreguem alta transferência e processamento de dados, há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação. Esse problema fará parte de nossa análise neste trabalho.
-
-Para ser possível produzir programas utilizando GPU, tanto o dispositivo  deve suportar as operações presentes nas especificações modelo específico quanto o controlador do sistema operacional deve disponibilizar a API para que o desenvolvedor possar fazer uso.
-
-\subsubsection{Modelo de execução SIMT}
-
-\textit{Single Instructions, Multiple Threads} (SIMT) é um subconjunto do modelo SIMD utilizando múltiplas \textit{threads} do dispositivo para operar uma instrução única concorrentemente. O SIMT assim como os outros aspectos destacados nesta seção, são fundamentais para entender o funcionamento de GPUs e como programá-las eficientemente~\cite{nickolls2008}. Nas seções posteriores, será apresentado formas de programar com as ferramentas seguem o modelo SIMT para desenvolvimento.
-
-\subsection{Imagem digital}
+\subsubsection{Imagens digitais}
 
 Uma imagem digital é uma representação bidimensional de uma cena ou objeto, composta por uma matriz de píxeis (do inglês, \textit{picture elements}). Cada píxel contém informações sobre cor e intensidade, que podem ser representadas em diferentes formatos, como RGB (vermelho, verde, azul), RGBA (RGB com fator de transparência alfa) ou escala de cinza~\cite{gonzalez17}.
-
-\subsection{Processamento de imagens digitais}
 
 Imagens armazenam informações visuais que podem ser processadas e analisadas por funções matemáticas por computadores para, por exemplo, melhorar a nitidez, extrair características ou preparar para análise posterior.
 
@@ -99,9 +51,7 @@ Uma operação é dita pontual quando processa os dados de cada píxel da imagem
 	\end{bmatrix}
 \]
 
-Produto matricial é comumente utilizado em operações de transformação geométrica, como rotação, escala e translação de imagens que é um ponto de foco para computação gráfica~\cite{gonzalez17,shirley15}.
-
-Quando uma operação ser apresentada nesse trabalho será considerado uma operação pontual, a menos que seja explicitamente declarado como uma operação matricial.
+Produto matricial é comumente utilizado em operações de transformação geométrica, como rotação, escala e translação de imagens que é um ponto de foco para computação gráfica~\cite{gonzalez17,shirley15}. Logo, quando uma operação ser apresentada nesse trabalho será considerado exclusivamente uma operação pontual, a menos que seja explicitamente declarado como uma operação matricial.
 
 \subsubsection{Operações lineares e não-lineares}
 
@@ -114,15 +64,15 @@ Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,
 
 \noindent Um exemplo de operador linear é a escala de cinza, que pode ser representada como uma combinação linear dos canais RGB:
 \begin{equation}
-    I_{out}(i,j) = G(I(i,j)) = 0.299 R + 0.587 G + 0.114 B
+	I_{out}(i,j) = G(I(i,j)) = 0.299 R + 0.587 G + 0.114 B
 \end{equation}
 
-\noindent Um exemplo de operador não-linear é o limiar, que define um valor de corte para segmentar a imagem em duas classes utilizando os valores dos píxeis:
+\noindent Um exemplo de operador não-linear é a limiarização, que define um valor de corte \(T\) para segmentar a imagem em duas classes utilizando os valores dos píxeis:
 \begin{equation}
-    I_{out}(i,j) = T(I(i,j)) =
+	I_{out}(i,j) = T(I(i,j)) =
 	\begin{cases}
-		1, & \text{se } I(i,j) \geq \text{limiar} \\
-		0, & \text{se } I(i,j) < \text{limiar}
+		1, & I(i,j) \geq T \\
+		0, & I(i,j) < T
 	\end{cases}
 \end{equation}
 
@@ -130,27 +80,65 @@ Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,
 
 Um operador é dito de ponto-a-ponto quando altera cada píxel da própria imagem por meio de um valor de referência para produzir a imagem resultante. Sendo assim, cada píxel da imagem resultante depende exclusivamente do valor do píxel correspondente na imagem original. Considerando uma função de transformação \(T(z)\) tem como exemplo a operação complemento ou inversão de cores, que pode ser definida como:
 \begin{equation}
-    I_{out}(i,j) = T(I_{in}(i,j)) = 1 - I_{in}(i,j)
+	I_{out}(i,j) = T(I_{in}(i,j)) = 1 - I_{in}(i,j)
 \end{equation}
 
-Um operador é dito de janela quando processa uma imagem considerando a vizinhança dos píxeis por meio de uma máscara ou \textit{kernel} representado pro uma matriz que é aplicado sobre a imagem original para produzir a imagem resultante. Com isso, cada píxel da imagem resultante depende dos valores dos píxeis vizinhos na imagem original. Considerando uma máscara \(K\) de tamanho \(m \times n\), a operação de convolução é um exemplo de operador de janela, definida como:
+Um operador é dito de janela quando processa uma imagem considerando a vizinhança dos píxeis por meio de uma máscara ou \textit{kernel} representado por uma matriz aplicado sobre a imagem original para produzir a imagem resultante. Com isso, cada píxel da imagem resultante depende dos valores dos píxeis vizinhos na imagem original. Considerando uma máscara \(K\) de tamanho \(m \times n\), a operação de convolução é um exemplo de operador de janela, definida como:
 \begin{equation}
-    I_{out}(i,j) = \sum_{u=-\lfloor m/2 \rfloor}^{\lfloor m/2 \rfloor} \sum_{v=-\lfloor n/2 \rfloor}^{\lfloor n/2 \rfloor} K(u,v) \cdot I_{in}(i+u,j+v)
+	I_{out}(i,j) = \sum_{u=-\lfloor m/2 \rfloor}^{\lfloor m/2 \rfloor} \sum_{v=-\lfloor n/2 \rfloor}^{\lfloor n/2 \rfloor} K(u,v) \cdot I_{in}(i+u,j+v)
 \end{equation}
 
 \subsubsection{Operações morfológicas}
 
 Operações morfológicas constituem uma família distinta de transformações que exploram a forma e a estrutura de objetos na imagem por meio de um elemento estruturante \(B\). Em imagens binárias, uma imagem pode ser vista como um conjunto \(A \subset \mathbb{Z}^2\) dos pontos (píxeis) com valor 1. As duas operações fundamentais são erosão e dilatação, definidas em termos de teoria dos conjuntos como:
 \begin{align}
-    A \ominus B &= \{ z \in \mathbb{Z}^2 \mid B_z \subseteq A \}, \\
-    A \oplus B &= \{ z \in \mathbb{Z}^2 \mid \hat{B}_z \cap A \neq \emptyset \},
+	A \ominus B & = \{ z \in \mathbb{Z}^2 \mid B_z \subseteq A \},                 \\
+	A \oplus B  & = \{ z \in \mathbb{Z}^2 \mid \hat{B}_z \cap A \neq \emptyset \},
 \end{align}
 onde \(B_z\) denota a translação do elemento estruturante \(B\) pela posição \(z\) e \(\hat{B}\) é a reflexão de \(B\). Intuitivamente, a erosão encolhe objetos e remove pequenos artefatos, enquanto a dilatação expande objetos e preenche lacunas.
 
 A escolha do elemento estruturante — sua forma (retangular, disco, cruz, etc.) e seu tamanho — determina quais características morfológicas são preservadas ou removidas~\cite{gonzalez17}.
 
-\subsection{Modelos de programação paralela para GPU}
+\subsection{Arquiteturas de computadores}
 
-\subsubsection{OpenCL}
-\subsubsection{CUDA}
-\subsubsection{SYCL}
+Nessa seção, serão apresentados conceitos básicos sobre arquiteturas de computadores, componentes importantes, sistemas operacionais e programação paralela e concorrente. Não entraremos em detalhes técnicos profundos, mas forneceremos uma visão geral suficiente para entender os tópicos subsequentes relacionados à programação paralela em GPUs.
+
+\subsubsection{Componentes importantes}
+
+A CPU é responsável por executar instruções de programas. Em arquiteturas com um único núcleo, a execução é essencialmente sequencial; arquiteturas com múltiplos núcleos permitem execução física simultânea de instruções. Essas características de hardware definem capacidades e limitações para paralelização de tarefas~\cite{ArpaciDusseau23,pacheco11}.
+
+A GPU é um dispositivo especializado em calcular operações matemáticas em paralelo. Originalmente foram projetadas para auxiliar a CPU no processamento de gráficos, imagens, vídeos, jogos eletrônicos e entre outras aplicações~\cite{gonzalez17}.
+
+\subsubsection{Sistemas operacionais}
+
+O sistema operacional gerencia a execução de processos e \textit{threads} mediante políticas de escalonamento e troca de contexto, permitindo que múltiplos processos aparentem ser executados simultaneamente mesmo em hardware com poucos núcleos. Esse comportamento é comumente denominado concorrência e é essencial para responsividade e compartilhamento de recursos~\cite{ArpaciDusseau23}.
+
+Um processo é uma instância de um programa em execução com seu próprio espaço de endereçamento. \textit{Threads} são unidades de execução num processo que compartilham memória e recursos, o que facilita a comunicação, mas exige mecanismos de sincronização como travas e barreiras para evitar condições de corrida~\cite{ArpaciDusseau23}.
+
+Enquanto uma CPU contêm núcleos de processamento mais complexos que operam instruções sequencialmente, uma GPU tem uma arquitetura altamente paralelizável \textit{Single Instruction, Multiple Data} (SIMD) com até dezenas de milhares de núcleos de processamento mais simples~\cite{nickolls2008}. Um exemplo é demonstrado na \Cref{fig:gpu-cpu-comparation}, onde a área de silício dedicada ao processamento em uma GPU é significativamente maior do que em uma CPU, refletindo sua capacidade de paralelismo massivo~\cite{stallings15computer}.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.8\linewidth]{images/gpu-cpu-comparation.png}
+	\caption{Comparação da Área de Silício/Dedicação de Transistores entre CPU e GPU. Imagem adaptada de~\cite{stallings15computer}.}
+	\label{fig:gpu-cpu-comparation}
+\end{figure}
+
+\subsubsection{Programação paralela e concorrente}
+
+De forma simples, o principal objetivo da programação paralela é computar algo mais rapidamente. Um processo é dito paralelo quando uma tarefa é dividida em pequenas partes executadas simultaneamente com o intuito de acelerar a execução desta tarefa~\cite{ArpaciDusseau23,james23dpcpp}. A programação paralela é especialmente útil para tarefas que envolvem grandes volumes de dados ou cálculos complexos, onde a divisão do trabalho pode levar a melhorias significativas no desempenho.
+
+Concorrência descreve a gestão de múltiplas tarefas que progridem simultaneamente ao nível lógico; paralelismo refere-se à execução física simultânea de várias tarefas permitidas pela unidade de processamento. O número de \textit{threads} que pode ser escalonado de forma eficiente depende tanto do sistema operacional quanto da arquitetura de hardware. Exceder esses recursos faz com que as \textit{threads} concorram por CPU, memória e cache, aumentando trocas de contexto e, em muitos casos, degradando o desempenho~\cite{ArpaciDusseau23,stallings15computer}.
+
+Dois padrões recorrentes são o \textit{data parallelism} e o \textit{task parallelism}. No \textit{data parallelism} uma única tarefa é aplicada para todas as \textit{threads}, já no \textit{task parallelism} as \textit{threads} são distribuídas para múltiplas tarefas~\cite{pacheco11}. Esses modelos orientam a escolha de algoritmos e frameworks de programação paralela.
+Será dada ênfase no \textit{data parallelism}, pois é o modelo mais adequado para o processamento de imagens, que é o foco deste trabalho.
+
+\subsubsection{GPGPU}
+
+GPUs passaram a ser usadas para computação de propósito geral (GPGPU) em aplicações com algoritmos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizados de máquina. Embora GPUs entreguem alta transferência e processamento de dados, há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação.
+
+Para ser possível produzir programas utilizando GPU, tanto o dispositivo deve suportar as operações presentes nas especificações modelo específico quanto o controlador do sistema operacional deve disponibilizar a API para que o desenvolvedor possar fazer uso~\cite{nickolls2008}.
+
+O modelo mais utilizado para programação em GPU é o \textit{Single Instructions, Multiple Threads} (SIMT), um subconjunto do modelo SIMD utilizando múltiplas \textit{threads} do dispositivo para operar uma instrução única concorrentemente. Cada \textit{thread} é responsável por um subconjunto dos dados, permitindo que milhares de \textit{threads} sejam executadas em paralelo. A arquitetura SIMT é eficiente para operações que podem ser divididas em muitas tarefas independentes, como processamento de imagens, onde cada píxel pode ser processado separadamente~\cite{nickolls2008,stallings15computer}.
+
+% OpenCL, CUDA e SYCL
