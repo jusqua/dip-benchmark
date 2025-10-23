@@ -130,8 +130,8 @@ De forma simples, o principal objetivo da programação paralela é computar alg
 
 Concorrência descreve a gestão de múltiplas tarefas que progridem simultaneamente ao nível lógico; paralelismo refere-se à execução física simultânea de várias tarefas permitidas pela unidade de processamento. O número de \textit{threads} que pode ser escalonado de forma eficiente depende tanto do sistema operacional quanto da arquitetura de hardware. Exceder esses recursos faz com que as \textit{threads} concorram por CPU, memória e cache, aumentando trocas de contexto e, em muitos casos, degradando o desempenho~\cite{ArpaciDusseau23,stallings15computer}.
 
-Dois padrões recorrentes são o \textit{data parallelism} e o \textit{task parallelism}. No \textit{data parallelism} uma única tarefa é aplicada para todas as \textit{threads}, já no \textit{task parallelism} as \textit{threads} são distribuídas para múltiplas tarefas~\cite{pacheco11}. Esses modelos orientam a escolha de algoritmos e frameworks de programação paralela.
-Será dada ênfase no \textit{data parallelism}, pois é o modelo mais adequado para o processamento de imagens, que é o foco deste trabalho.
+Dois padrões recorrentes são o \textit{data parallelism} e o \textit{task parallelism}. Em \textit{data parallelism} uma única tarefa é aplicada para todas as \textit{threads}, já em \textit{task parallelism} as \textit{threads} são distribuídas para múltiplas tarefas~\cite{pacheco11}. Esses modelos orientam a escolha de algoritmos e frameworks de programação paralela.
+Será dada ênfase em \textit{data parallelism}, pois é o modelo mais adequado para o processamento de imagens, sendo o foco deste trabalho.
 
 \subsubsection{GPGPU}
 
@@ -141,4 +141,102 @@ Para ser possível produzir programas utilizando GPU, tanto o dispositivo deve s
 
 O modelo mais utilizado para programação em GPU é o \textit{Single Instructions, Multiple Threads} (SIMT), um subconjunto do modelo SIMD utilizando múltiplas \textit{threads} do dispositivo para operar uma instrução única concorrentemente. Cada \textit{thread} é responsável por um subconjunto dos dados, permitindo que milhares de \textit{threads} sejam executadas em paralelo. A arquitetura SIMT é eficiente para operações que podem ser divididas em muitas tarefas independentes, como processamento de imagens, onde cada píxel pode ser processado separadamente~\cite{nickolls2008,stallings15computer}.
 
-% OpenCL, CUDA e SYCL
+\subsection{Tecnologias de programação paralela}
+
+Nesta seção, serão apresentadas as principais tecnologias e modelos de programação para computação paralela em GPUs que serão postos a prova. Especificamente, abordaremos CUDA, OpenCL e SYCL, que são amplamente utilizados no desenvolvimento de aplicações de alto desempenho.
+
+\subsubsection{CUDA}
+
+CUDA (\textit{Compute Unified Device Architecture}) é uma plataforma de programação paralela e um modelo de programação criado pela NVIDIA em 2006~\cite{nickolls2008} o que permite que desenvolvedores utilizem GPUs da NVIDIA para computação de propósito geral, expondo diretamente a arquitetura paralela do hardware via extensões da linguagem C/C++.
+
+No modelo CUDA, o código executado na GPU é denominado \textit{kernel}, que é uma função executada em paralelo por milhares de \textit{threads}. As \textit{threads} são organizadas hierarquicamente em \textit{blocos} e \textit{grids}, permitindo que o programador expresse tanto paralelismo em dados quanto em tarefas. Cada \textit{thread} possui um identificador único que pode ser usado para determinar qual porção dos dados ela deve processar~\cite{nickolls2008}.
+
+O modelo de memória CUDA é composto por diferentes tipos de memória com características distintas de latência e largura de banda: memória global (acessível por todas as \textit{threads}, mas com alta latência), memória compartilhada (rápida, mas limitada a um bloco de \textit{threads}), registradores (privados a cada \textit{thread}) e memória constante.
+
+Um exemplo clássico de aplicação CUDA é a soma vetorial, onde dois vetores \(A\) e \(B\) de tamanho \(N\) são somados elemento a elemento para produzir um vetor \(C\):
+
+\begin{minted}{cpp}
+__global__ void vectorAdd(float *A, float *B, float *C, int N) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < N) {
+        C[idx] = A[idx] + B[idx];
+    }
+}
+\end{minted}
+
+Neste exemplo, cada \textit{thread} calcula a soma de um único elemento dos vetores de entrada. A expressão \texttt{blockIdx.x * blockDim.x + threadIdx.x} determina o índice global da \textit{thread}, garantindo que cada elemento seja processado exatamente uma vez.
+
+\subsubsection{OpenCL}
+
+OpenCL (\textit{Open Computing Language}) é um padrão aberto e livre de \textit{royalties} mantido pelo Khronos Group para programação paralela heterogênea~\cite{stone2010opencl}. Lançado em 2009, OpenCL foi projetado para ser portável entre diferentes tipos de processadores, incluindo CPUs, GPUs, FPGAs e outros aceleradores, permitindo que o mesmo código seja executado em hardware de diferentes fabricantes~\cite{opencl2025}.
+
+Diferentemente do CUDA, específico para GPUs NVIDIA, OpenCL adota uma abordagem agnóstica de plataforma. O modelo de programação OpenCL separa claramente o código do \textit{host} (CPU) do código do dispositivo (\textit{kernel}), compilado em tempo de execução. Isso proporciona flexibilidade, mas pode introduzir complexidade adicional no desenvolvimento~\cite{stone2010opencl}.
+
+O modelo de memória OpenCL define quatro regiões distintas: memória global, memória constante, memória local (equivalente à memória compartilhada do CUDA) e memória privada. O modelo de execução organiza \textit{work-items} (equivalente a \textit{threads} no CUDA) em \textit{work-groups} (equivalente a blocos)~\cite{opencl2025}.
+
+Um exemplo equivalente de soma vetorial em OpenCL seria:
+
+\begin{minted}{cpp}
+__kernel void vectorAdd(__global float *A, __global float *B, __global float *C, int N) {
+    int idx = get_global_id(0);
+    if (idx < N) {
+        C[idx] = A[idx] + B[idx];
+    }
+}
+\end{minted}
+
+O qualificador \texttt{\_\_global} indica que os ponteiros apontam para memória global do dispositivo, e \texttt{get\_global\_id(0)} retorna o identificador global do \textit{work-item} na dimensão 0.
+
+\subsubsection{SYCL}
+
+SYCL é um padrão de programação paralela em C++ de alto nível, também mantido pelo Khronos Group. Lançado inicialmente em 2014 e atualizado significativamente na versão 2020, SYCL constrói sobre o OpenCL fornecendo uma interface moderna em C++ puro, sem necessidade de extensões de linguagem ou sintaxe especial para \textit{kernels}.
+
+O principal diferencial do SYCL é sua abordagem de \textit{single-source}, onde o código do \textit{host} e do dispositivo residem no mesmo código-fonte e utilizam C++. Isso permite o uso de recursos da linguagem como \textit{templates}, \textit{lambdas} e inferência de tipos, tornando o código mais expressivo e menos propenso a erros~\cite{james23dpcpp}.
+
+SYCL também promove portabilidade através do conceito de \textit{backends}, permitindo que o mesmo código seja executado em diferentes tipos de hardware (GPUs NVIDIA, AMD, Intel, CPUs, FPGAs) sem modificações. Implementações populares incluem DPC++ (Data Parallel C++, da Intel) e AdaptiveCpp~\cite{james23dpcpp,acpp}.
+
+O modelo de execução SYCL utiliza filas (\texttt{queue}) para submeter trabalho aos dispositivos, e define \textit{kernels} usando expressões lambda ou \textit{functors}. O modelo de memória abstrai as diferentes regiões mediante \textit{buffers} e \textit{accessors}, gerenciando automaticamente transferências de dados e sincronização.
+
+Exemplo de soma vetorial em SYCL com \textit{buffers}:
+
+\begin{minted}{cpp}
+queue q;
+
+buffer<float> bufA(A, N);
+buffer<float> bufB(B, N);
+buffer<float> bufC(C, N);
+
+q.submit([&](handler &h) {
+    accessor accA(bufA, h, read_only);
+    accessor accB(bufB, h, read_only);
+    accessor accC(bufC, h, write_only);
+
+    h.parallel_for(range<1>(N), [=](id<1> idx) {
+        accC[idx] = accA[idx] + accB[idx];
+    });
+});
+\end{minted}
+
+Neste exemplo, os \textit{buffers} encapsulam os dados e os \textit{accessors} declaram como cada \textit{kernel} acessa a memória. O método \texttt{parallel\_for} expressa o paralelismo de dados, e uma expressão lambda define o corpo do \textit{kernel}.
+
+Também é suportado uso de \textit{Unified Shared Memory} (USM) para acesso direto à memória compartilhada entre host e dispositivo utilizando a sintaxe de ponteiros com gerenciamento manual de memória~\cite{james23dpcpp}.
+
+Exemplo de soma vetorial em SYCL com USM:
+
+\begin{minted}{cpp}
+queue q;
+
+size_t size = N * sizeof(float);
+float* memA = sycl::malloc_device<float>(size);
+float* memB = sycl::malloc_device<float>(size);
+float* memC = sycl::malloc_device<float>(size);
+
+q.memcpy(memA, A, size).wait();
+q.memcpy(memB, B, size).wait();
+
+q.parallel_for(range<1>(N), [=](id<1> idx) {
+    memC[idx] = memA[idx] + memB[idx];
+}).wait();
+
+q.memcpy(C, memC, size).wait();
+\end{minted}

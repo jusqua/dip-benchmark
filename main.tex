@@ -27,12 +27,13 @@
 \usepackage{verbatim}
 \usepackage{amsmath}
 \usepackage[capitalize, nameinlink, brazilian]{cleveref}
-\usepackage{xcolor}
+\usepackage{minted}
+\usepackage[svgnames]{xcolor}
+\usemintedstyle{friendly}
 \definecolor{verde}{rgb}{0.25,0.5,0.35}
 \definecolor{jpurple}{rgb}{0.5,0,0.35}
 \definecolor{darkgreen}{rgb}{0.0, 0.2, 0.13}
 \usepackage{listings}
-\usepackage{xcolor}
 
 \lstset{ frame=TB, numbers=left, stepnumber=1, basicstyle=\ttfamily\scriptsize,
 captionpos=b, xleftmargin=0.7cm, xrightmargin=0.4cm, escapechar=@, breaklines=true}
@@ -45,8 +46,13 @@ captionpos=b, xleftmargin=0.7cm, xrightmargin=0.4cm, escapechar=@, breaklines=tr
 \usepackage{tocbasic}
 
 \makeatletter
-\renewcommand{\tableofcontents}{\null\hfill\textbf{\Large\contentsname}\hfill\null\par
-\@mkboth{\MakeUppercase\contentsname}{\MakeUppercase\contentsname} \@starttoc{toc}}
+\renewcommand{\tableofcontents}{%
+  \begingroup
+    \par\centering\textbf{\Large\contentsname}\par
+    \@mkboth{\MakeUppercase{\contentsname}}{\MakeUppercase{\contentsname}}%
+  \endgroup
+  \@starttoc{toc}%
+}
 \makeatother
 
 \author{COPES - UFS}
