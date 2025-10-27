@@ -51,7 +51,7 @@ Uma operação é dita pontual quando processa os dados de cada píxel da imagem
 	\end{bmatrix}
 \]
 
-Produto matricial é comumente utilizado em operações de transformação geométrica, como rotação, escala e translação de imagens que é um ponto de foco para computação gráfica~\cite{gonzalez17,shirley15}. Logo, quando uma operação ser apresentada nesse trabalho será considerado exclusivamente uma operação pontual, a menos que seja explicitamente declarado como uma operação matricial.
+Produto matricial é comumente utilizado em operações de transformação geométrica, como rotação, escala e translação de imagens que é um ponto de foco para computação gráfica~\cite{shirley15}. Logo, quando uma operação ser apresentada nesse trabalho será considerado exclusivamente uma operação pontual, a menos que seja explicitamente declarado como uma operação matricial.
 
 \subsubsection{Operações lineares e não-lineares}
 
@@ -78,7 +78,7 @@ Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,
 
 \subsubsection{Operações ponto-a-ponto e de janela}
 
-Um operador é dito de ponto-a-ponto quando altera cada píxel da própria imagem por meio de um valor de referência para produzir a imagem resultante. Sendo assim, cada píxel da imagem resultante depende exclusivamente do valor do píxel correspondente na imagem original. Considerando uma função de transformação \(T(z)\) tem como exemplo a operação complemento ou inversão de cores, que pode ser definida como:
+Um operador é dito de ponto-a-ponto quando altera cada píxel da própria imagem por meio de um valor de referência para produzir a imagem resultante~\cite{gonzalez17}. Sendo assim, cada píxel da imagem resultante depende exclusivamente do valor do píxel correspondente na imagem original. Considerando uma função de transformação \(T(z)\) tem como exemplo a operação complemento ou inversão de cores, que pode ser definida como:
 \begin{equation}
 	I_{out}(i,j) = T(I_{in}(i,j)) = 1 - I_{in}(i,j)
 \end{equation}
@@ -101,7 +101,7 @@ A escolha do elemento estruturante — sua forma (retangular, disco, cruz, etc.)
 
 \subsection{Arquiteturas de computadores}
 
-Nessa seção, serão apresentados conceitos básicos sobre arquiteturas de computadores, componentes importantes, sistemas operacionais e programação paralela e concorrente. Não entraremos em detalhes técnicos profundos, mas forneceremos uma visão geral suficiente para entender os tópicos subsequentes relacionados à programação paralela em GPUs.
+Nessa subseção, serão apresentados conceitos básicos sobre arquiteturas de computadores, componentes importantes, sistemas operacionais e programação paralela e concorrente. Não entraremos em detalhes técnicos profundos, mas forneceremos uma visão geral suficiente para entender os tópicos subsequentes relacionados à programação paralela em GPUs.
 
 \subsubsection{Componentes importantes}
 
@@ -143,7 +143,7 @@ O modelo mais utilizado para programação em GPU é o \textit{Single Instructio
 
 \subsection{Tecnologias de programação paralela}
 
-Nesta seção, serão apresentadas as principais tecnologias e modelos de programação para computação paralela em GPUs que serão postos a prova. Especificamente, abordaremos CUDA, OpenCL e SYCL, que são amplamente utilizados no desenvolvimento de aplicações de alto desempenho.
+Nesta subseção, serão apresentadas as principais tecnologias e modelos de programação para computação paralela em GPUs que serão postos a prova. Especificamente, abordaremos CUDA, OpenCL e SYCL, que são amplamente utilizados no desenvolvimento de aplicações de alto desempenho.
 
 \subsubsection{CUDA}
 
