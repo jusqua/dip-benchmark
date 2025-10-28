@@ -1,45 +1,74 @@
 \section{Metodologia}
 
-A metodologia adotada será baseada nos experimentos de \cite{Dantas2015opencl} que utiliza a biblioteca VisionGL com operadores de processamento de imagens implementados em OpenCL como base para análise de desempenho de diferentes tecnologias de computação paralela. Repetiremos o experimento com as mesmas e novas bibliotecas e tecnologias:
+Nesta seção, será apresentada a metodologia adotada para o desenvolvimento dos experimentos de benchmark comparativo entre diferentes tecnologias de computação paralela aplicadas ao processamento de imagens.
+
+\subsection{Estudo e Experimentos}
+
+A metodologia adotada será baseada nos experimentos de \cite{Dantas2015opencl} que utiliza a biblioteca VisionGL com operadores de processamento de imagens implementados em OpenCL como base para análise de desempenho de diferentes tecnologias de computação paralela. Repetiremos o experimento com estas tecnologias:
 \begin{itemize}
-    \item SYCL através do compilador AdaptiveCPP.
+	\item SYCL através do compilador AdaptiveCPP.
 	\item CUDA com Julia através da biblioteca CUDA.jl.
 	\item OpenCV com Python através da biblioteca opencv-python.
 	\item OpenCL através da biblioteca VisionGL.
 	\item MATLAB Parallel Computing Toolbox.
 \end{itemize}
 
-A foi feito um \textit{fork} da biblioteca VisionGL\footnote{\url{https://github.com/ddantas/visiongl}} para estudo da estrutura do projeto e desenvolvimento dos operadores lógicos em outras tecnologia. O \textit{fork} este presente no repositório do GitHub\footnote{\url{https://github.com/jusqua/visiongl}}.
+Desenvolveremos os operadores de processamento de imagens conforme descritos nas \Crefrange{eq:grayscale}{eq:dilation} nas tecnologias que buscamos analisar o desempenho.
 
-Desenvolveremos os operadores de processamento de imagens descritos conforme as \Crefrange{eq:grayscale}{eq:dilation} nas ferramentas que buscamos analizar o desempenho. Além disso, é necessário também analisar a transferência de dados entre a memória do dispositivo e a memória do hospedeiro, bem como o gerenciamento de memória para garantir que os dados sejam acessados de forma eficiente durante a execução dos operadores.
+A foi feito um \textit{fork} da biblioteca VisionGL\footnote{\url{https://github.com/ddantas/visiongl}} para estudo da estrutura do projeto e desenvolvimento dos operadores lógicos em outras tecnologias. O \textit{fork} este presente no repositório do GitHub\footnote{\url{https://github.com/jusqua/visiongl}}.
+
+\subsection{Recursos Utilizados}
 
 As especificações do ambiente de trabalho utilizado no momento da realização dos experimentos:
 \begin{itemize}
-    \item \textbf{Hardware:}
-    \begin{itemize}
-        \item Processador: Intel Core i9-14900K
-        \item Memória RAM: 32GB DDR5
-        \item Placa de Vídeo: NVIDIA GeForce RTX 5060 Ti 16GB
-    \end{itemize}
-    \item \textbf{Software:}
-    \begin{itemize}
-        \item Sistema Operacional: Fedora Linux 42
-        \item Kernel: 6.16.7-200
-        \item GPU Driver: 580.82.07
-        \item CUDA Driver: 13.0.84
-        \item OpenCL: 3.0
-        \item Compilador C++: Clang 20.1.8-4
-        \item Compilador SYCL: AdaptiveCPP (commit fe13c2d1f1244d9a2faffeee0bb34e6bfec18aba)
-        \item Runtime Julia: 1.11.7
-        \item Runtime Python: 3.13.7
-        \item Runtime MATLAB: 25.1.0.2943329 (R2025a)
-    \end{itemize}
-    \item \textbf{Bibliotecas:}
-    \begin{itemize}
-        \item VisionGL: (commit 45078178be564f59c601fca295afca9897b90dba)
-        \item OpenCV: 4.10.0
-        \item CUDA.jl: 5.8.3
-    \end{itemize}
+	\item \textbf{Hardware:}
+	      \begin{itemize}
+		      \item Processador: Intel Core i9-14900K
+		      \item Memória RAM: 32GB DDR5
+		      \item Placa de Vídeo: NVIDIA GeForce RTX 5060 Ti 16GB
+	      \end{itemize}
+	\item \textbf{Software:}
+	      \begin{itemize}
+		      \item Sistema Operacional: Fedora Linux 42
+		      \item Kernel: 6.16.7-200
+		      \item GPU Driver: 580.82.07
+		      \item CUDA Driver: 13.0.84
+		      \item OpenCL: 3.0
+		      \item Compilador C++: Clang 20.1.8-4
+		      \item Compilador SYCL: AdaptiveCPP (commit fe13c2d1f1244d9a2faffeee0bb34e6bfec18aba)
+		      \item Runtime Julia: 1.11.7
+		      \item Runtime Python: 3.13.7
+		      \item Runtime MATLAB: 25.1.0.2943329 (R2025a)
+	      \end{itemize}
+	\item \textbf{Bibliotecas:}
+	      \begin{itemize}
+		      \item VisionGL: (commit 45078178be564f59c601fca295afca9897b90dba)
+		      \item OpenCV: 4.10.0
+		      \item CUDA.jl: 5.8.3
+	      \end{itemize}
 \end{itemize}
+
+\subsection{Estrutura do Benchmark}
+
+Para garantir comparações justas entre as tecnologias, foi desenvolvida uma estrutura de benchmark que:
+\begin{enumerate}
+	\item Carrega a mesma imagem de entrada para todas as tecnologias.
+	\item Realiza o aquecimento da GPU executando cada operador uma vez antes das medições.
+	\item Executa cada operador múltiplas vezes (10000 iterações) para obter medições estatisticamente significativas.
+	\item Mede o tempo de execução incluindo transferência de dados entre CPU e GPU.
+	\item Mede o tempo de execução apenas do processamento no dispositivo.
+	\item Registra uso de memória e outras métricas relevantes.
+\end{enumerate}
+
+A imagem de teste utilizada nos experimentos é a mostrada na \Cref{fig:fundus} com dimensões de $3504x2336$ píxeis e 3 canais de cor. A imagem foi escolhida por conter por ser grande o suficiente para ter um atraso significativo no processamento.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.8\linewidth]{images/fundus.jpg}
+	\caption{Imagem de olho com retinopatia diabética. Obtida em: \url{https://www5.cs.fau.de/research/data/fundus-images/}}
+	\label{fig:fundus}
+\end{figure}
+
+Todos os experimentos foram executados com a mesma imagem de teste para avaliar o comportamento de escala de cada tecnologia. Os resultados foram salvos em formato estruturado para análise posterior.
 
 Todos os experimentos e simulações deste trabalho que foram realizados estão presentes no repositório do GitHub\footnote{\url{https://github.com/jusqua/dip-benchmark}}.

@@ -64,13 +64,13 @@ Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,
 
 \noindent Um exemplo de operador linear é a escala de cinza, que pode ser representada como uma combinação linear dos canais RGB:
 \begin{equation}
-\label{eq:grayscale}
+	\label{eq:grayscale}
 	I_{out}(i,j) = G(I(i,j)) = 0.299 R + 0.587 G + 0.114 B
 \end{equation}
 
 \noindent Um exemplo de operador não-linear é a limiarização, que define um valor de corte \(T\) para segmentar a imagem em duas classes utilizando os valores dos píxeis:
 \begin{equation}
-\label{eq:thresholding}
+	\label{eq:thresholding}
 	I_{out}(i,j) = T(I(i,j)) =
 	\begin{cases}
 		1, & I(i,j) \geq T \\
@@ -82,13 +82,13 @@ Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,
 
 Um operador é dito de ponto-a-ponto quando altera cada píxel da própria imagem por meio de um valor de referência para produzir a imagem resultante~\cite{gonzalez17}. Sendo assim, cada píxel da imagem resultante depende exclusivamente do valor do píxel correspondente na imagem original. Considerando uma função de transformação \(T(z)\) tem como exemplo a operação complemento ou inversão de cores, que pode ser definida como:
 \begin{equation}
-\label{eq:inversion}
+	\label{eq:inversion}
 	I_{out}(i,j) = T(I_{in}(i,j)) = 1 - I_{in}(i,j)
 \end{equation}
 
 Um operador é dito de janela quando processa uma imagem considerando a vizinhança dos píxeis por meio de uma máscara ou \textit{kernel} representado por uma matriz aplicado sobre a imagem original para produzir a imagem resultante. Com isso, cada píxel da imagem resultante depende dos valores dos píxeis vizinhos na imagem original. Considerando uma máscara \(K\) de tamanho \(m \times n\), a operação de convolução é um exemplo de operador de janela, definida como:
 \begin{equation}
-\label{eq:convolution}
+	\label{eq:convolution}
 	I_{out}(i,j) = \sum_{u=-\lfloor m/2 \rfloor}^{\lfloor m/2 \rfloor} \sum_{v=-\lfloor n/2 \rfloor}^{\lfloor n/2 \rfloor} K(u,v) \cdot I_{in}(i+u,j+v)
 \end{equation}
 
@@ -96,11 +96,11 @@ Um operador é dito de janela quando processa uma imagem considerando a vizinhan
 
 Operações morfológicas constituem uma família distinta de transformações que exploram a forma e a estrutura de objetos na imagem por meio de um elemento estruturante \(B\). Em imagens binárias, uma imagem pode ser vista como um conjunto \(A \subset \mathbb{Z}^2\) dos pontos (píxeis) com valor 1. As duas operações fundamentais são erosão e dilatação, definidas em termos de teoria dos conjuntos como:
 \begin{equation}
-\label{eq:erosion}
+	\label{eq:erosion}
 	A \ominus B = \{ z \in \mathbb{Z}^2 \mid B_z \subseteq A \},
 \end{equation}
 \begin{equation}
-\label{eq:dilation}
+	\label{eq:dilation}
 	A \oplus B = \{ z \in \mathbb{Z}^2 \mid \hat{B}_z \cap A \neq \emptyset \},
 \end{equation}
 

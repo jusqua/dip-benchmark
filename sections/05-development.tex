@@ -1,1 +1,37 @@
 \section{Desenvolvimento}
+
+Nesta seção, serão apresentados os detalhes de implementação dos operadores de processamento de imagens em cada uma das tecnologias avaliadas. Cada subseção descreve as particularidades e desafios encontrados durante o desenvolvimento em cada tecnologia.
+
+\subsection{Implementação em SYCL com AdaptiveCPP}
+
+Para cada operador, foi criado um \textit{functor} para servir como \textit{kernel} de execução. O gerenciamento de memória foi realizado por meio de USM, que não abstraem a transferência de dados entre CPU e GPU.
+
+% Detalhar a implementação num Functor
+
+\subsection{Implementação em CUDA com Julia}
+
+A implementação em Julia utilizou o pacote CUDA.jl, que fornece uma interface de alto nível para programação CUDA. A sintaxe de Julia permitiu escrever \textit{kernels} de forma mais concisa em comparação com CUDA em C/C++.
+
+% Detalhar a implementação numa função
+
+\subsection{Implementação em OpenCV com Python}
+
+A implementação em OpenCV utilizou a biblioteca opencv-python, que fornece \textit{bindings} Python para a biblioteca OpenCV escrita em C++. OpenCV oferece funções integradas para a maioria dos operadores de processamento de imagens e utilizamos o objeto \textit{UMat} para processamento na GPU via OpenCL.
+
+% Detalhar a usabilidade do UMat
+
+\subsection{Implementação em OpenCL com VisionGL}
+
+A implementação em OpenCL utilizou a biblioteca VisionGL como base, que já fornece uma estrutura para operadores de processamento de imagens. O trabalho consistiu em analisar os operadores existentes e garantir compatibilidade com o ambiente de benchmark.
+
+% Detalhar a usabilidade do UMat
+
+\subsection{Implementação em MATLAB}
+
+A implementação em MATLAB utilizou a Parallel Computing Toolbox, que permite transferir arrays para GPU utilizando a função \texttt{gpuArray} e executar operações em GPU de forma transparente.
+
+MATLAB fornece funções nativas para processamento de imagens através do Image Processing Toolbox, que podem ser aceleradas em GPU. Funções como \texttt{rgb2gray}, \texttt{imdilate} e \texttt{imerode} foram utilizadas diretamente com arrays na GPU.
+
+Para operadores aritméticos simples, o MATLAB permite usar operadores nativos (+, -, *, /) diretamente em \texttt{gpuArrays}, com a execução sendo automaticamente transferida para a GPU. O código resultante é significativamente mais conciso em comparação com as outras tecnologias, mas com menos controle sobre detalhes de implementação.
+
+% No caso de transferência de CPU para GPU falar sobre o COW
