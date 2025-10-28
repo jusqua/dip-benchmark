@@ -1,13 +1,45 @@
 \section{Metodologia}
 
-Neste capítulo serão apresentados os materiais e recursos utilizados para a realização deste trabalho, bem como a metodologia adotada para a construção dos experimentos.
+A metodologia adotada será baseada nos experimentos de \cite{Dantas2015opencl} que utiliza a biblioteca VisionGL com operadores de processamento de imagens implementados em OpenCL como base para análise de desempenho de diferentes tecnologias de computação paralela. Repetiremos o experimento com as mesmas e novas bibliotecas e tecnologias:
+\begin{itemize}
+    \item SYCL através do compilador AdaptiveCPP.
+	\item CUDA com Julia através da biblioteca CUDA.jl.
+	\item OpenCV com Python através da biblioteca opencv-python.
+	\item OpenCL através da biblioteca VisionGL.
+	\item MATLAB Parallel Computing Toolbox.
+\end{itemize}
 
-\subsection{Recursos Utilizados}
+A foi feito um \textit{fork} da biblioteca VisionGL\footnote{\url{https://github.com/ddantas/visiongl}} para estudo da estrutura do projeto e desenvolvimento dos operadores lógicos em outras tecnologia. O \textit{fork} este presente no repositório do GitHub\footnote{\url{https://github.com/jusqua/visiongl}}.
 
-Todos os experimentos e simulações deste trabalho que foram realizados estão presentes no repositório do GitHub\footnote{\url{https://github.com/jusqua/dip-benchmark}} as alterações ao VisionGL estão presentes num \textit{fork} no GitHub\footnote{\url{https://github.com/jusqua/visiongl}}. A seguir estão as especificações do hardware e software utilizados:
+Desenvolveremos os operadores de processamento de imagens descritos conforme as \Crefrange{eq:grayscale}{eq:dilation} nas ferramentas que buscamos analizar o desempenho. Além disso, é necessário também analisar a transferência de dados entre a memória do dispositivo e a memória do hospedeiro, bem como o gerenciamento de memória para garantir que os dados sejam acessados de forma eficiente durante a execução dos operadores.
 
-\subsection{Desenvolvimento dos operadores}
+As especificações do ambiente de trabalho utilizado no momento da realização dos experimentos:
+\begin{itemize}
+    \item \textbf{Hardware:}
+    \begin{itemize}
+        \item Processador: Intel Core i9-14900K
+        \item Memória RAM: 32GB DDR5
+        \item Placa de Vídeo: NVIDIA GeForce RTX 5060 Ti 16GB
+    \end{itemize}
+    \item \textbf{Software:}
+    \begin{itemize}
+        \item Sistema Operacional: Fedora Linux 42
+        \item Kernel: 6.16.7-200
+        \item GPU Driver: 580.82.07
+        \item CUDA Driver: 13.0.84
+        \item OpenCL: 3.0
+        \item Compilador C++: Clang 20.1.8-4
+        \item Compilador SYCL: AdaptiveCPP (commit fe13c2d1f1244d9a2faffeee0bb34e6bfec18aba)
+        \item Runtime Julia: 1.11.7
+        \item Runtime Python: 3.13.7
+        \item Runtime MATLAB: 25.1.0.2943329 (R2025a)
+    \end{itemize}
+    \item \textbf{Bibliotecas:}
+    \begin{itemize}
+        \item VisionGL: (commit 45078178be564f59c601fca295afca9897b90dba)
+        \item OpenCV: 4.10.0
+        \item CUDA.jl: 5.8.3
+    \end{itemize}
+\end{itemize}
 
-Nesta etapa, escolhemos algoritmos de processamento de imagens existentes na VisionGL para adaptação dos conceitos originais para as ferramentas que buscamos analizar algumas operações ponto a ponto e janela.
-
-Além disso, é necessário analisar a transferência de dados entre a memória do dispositivo e a memória do hospedeiro, bem como o gerenciamento de memória para garantir que os dados sejam acessados de forma eficiente durante a execução dos operadores.
+Todos os experimentos e simulações deste trabalho que foram realizados estão presentes no repositório do GitHub\footnote{\url{https://github.com/jusqua/dip-benchmark}}.

@@ -64,11 +64,13 @@ Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,
 
 \noindent Um exemplo de operador linear é a escala de cinza, que pode ser representada como uma combinação linear dos canais RGB:
 \begin{equation}
+\label{eq:grayscale}
 	I_{out}(i,j) = G(I(i,j)) = 0.299 R + 0.587 G + 0.114 B
 \end{equation}
 
 \noindent Um exemplo de operador não-linear é a limiarização, que define um valor de corte \(T\) para segmentar a imagem em duas classes utilizando os valores dos píxeis:
 \begin{equation}
+\label{eq:thresholding}
 	I_{out}(i,j) = T(I(i,j)) =
 	\begin{cases}
 		1, & I(i,j) \geq T \\
@@ -80,21 +82,28 @@ Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,
 
 Um operador é dito de ponto-a-ponto quando altera cada píxel da própria imagem por meio de um valor de referência para produzir a imagem resultante~\cite{gonzalez17}. Sendo assim, cada píxel da imagem resultante depende exclusivamente do valor do píxel correspondente na imagem original. Considerando uma função de transformação \(T(z)\) tem como exemplo a operação complemento ou inversão de cores, que pode ser definida como:
 \begin{equation}
+\label{eq:inversion}
 	I_{out}(i,j) = T(I_{in}(i,j)) = 1 - I_{in}(i,j)
 \end{equation}
 
 Um operador é dito de janela quando processa uma imagem considerando a vizinhança dos píxeis por meio de uma máscara ou \textit{kernel} representado por uma matriz aplicado sobre a imagem original para produzir a imagem resultante. Com isso, cada píxel da imagem resultante depende dos valores dos píxeis vizinhos na imagem original. Considerando uma máscara \(K\) de tamanho \(m \times n\), a operação de convolução é um exemplo de operador de janela, definida como:
 \begin{equation}
+\label{eq:convolution}
 	I_{out}(i,j) = \sum_{u=-\lfloor m/2 \rfloor}^{\lfloor m/2 \rfloor} \sum_{v=-\lfloor n/2 \rfloor}^{\lfloor n/2 \rfloor} K(u,v) \cdot I_{in}(i+u,j+v)
 \end{equation}
 
 \subsubsection{Operações morfológicas}
 
 Operações morfológicas constituem uma família distinta de transformações que exploram a forma e a estrutura de objetos na imagem por meio de um elemento estruturante \(B\). Em imagens binárias, uma imagem pode ser vista como um conjunto \(A \subset \mathbb{Z}^2\) dos pontos (píxeis) com valor 1. As duas operações fundamentais são erosão e dilatação, definidas em termos de teoria dos conjuntos como:
-\begin{align}
-	A \ominus B & = \{ z \in \mathbb{Z}^2 \mid B_z \subseteq A \},                 \\
-	A \oplus B  & = \{ z \in \mathbb{Z}^2 \mid \hat{B}_z \cap A \neq \emptyset \},
-\end{align}
+\begin{equation}
+\label{eq:erosion}
+	A \ominus B = \{ z \in \mathbb{Z}^2 \mid B_z \subseteq A \},
+\end{equation}
+\begin{equation}
+\label{eq:dilation}
+	A \oplus B = \{ z \in \mathbb{Z}^2 \mid \hat{B}_z \cap A \neq \emptyset \},
+\end{equation}
+
 onde \(B_z\) denota a translação do elemento estruturante \(B\) pela posição \(z\) e \(\hat{B}\) é a reflexão de \(B\). Intuitivamente, a erosão encolhe objetos e remove pequenos artefatos, enquanto a dilatação expande objetos e preenche lacunas.
 
 A escolha do elemento estruturante — sua forma (retangular, disco, cruz, etc.) e seu tamanho — determina quais características morfológicas são preservadas ou removidas~\cite{gonzalez17}.
@@ -155,14 +164,14 @@ O modelo de memória CUDA é composto por diferentes tipos de memória com carac
 
 Um exemplo clássico de aplicação CUDA é a soma vetorial, onde dois vetores \(A\) e \(B\) de tamanho \(N\) são somados elemento a elemento para produzir um vetor \(C\):
 
-\begin{minted}{cpp}
+\begin{verbatim}
 __global__ void vectorAdd(float *A, float *B, float *C, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < N) {
         C[idx] = A[idx] + B[idx];
     }
 }
-\end{minted}
+\end{verbatim}
 
 Neste exemplo, cada \textit{thread} calcula a soma de um único elemento dos vetores de entrada. A expressão \texttt{blockIdx.x * blockDim.x + threadIdx.x} determina o índice global da \textit{thread}, garantindo que cada elemento seja processado exatamente uma vez.
 
@@ -176,14 +185,17 @@ O modelo de memória OpenCL define quatro regiões distintas: memória global, m
 
 Um exemplo equivalente de soma vetorial em OpenCL seria:
 
-\begin{minted}{cpp}
-__kernel void vectorAdd(__global float *A, __global float *B, __global float *C, int N) {
+\begin{verbatim}
+__kernel void vectorAdd(__global float *A,
+                        __global float *B,
+                        __global float *C,
+                        int N) {
     int idx = get_global_id(0);
     if (idx < N) {
         C[idx] = A[idx] + B[idx];
     }
 }
-\end{minted}
+\end{verbatim}
 
 O qualificador \texttt{\_\_global} indica que os ponteiros apontam para memória global do dispositivo, e \texttt{get\_global\_id(0)} retorna o identificador global do \textit{work-item} na dimensão 0.
 
@@ -199,7 +211,7 @@ O modelo de execução SYCL utiliza filas (\texttt{queue}) para submeter trabalh
 
 Exemplo de soma vetorial em SYCL com \textit{buffers}:
 
-\begin{minted}{cpp}
+\begin{verbatim}
 queue q;
 
 buffer<float> bufA(A, N);
@@ -215,7 +227,7 @@ q.submit([&](handler &h) {
         accC[idx] = accA[idx] + accB[idx];
     });
 });
-\end{minted}
+\end{verbatim}
 
 Neste exemplo, os \textit{buffers} encapsulam os dados e os \textit{accessors} declaram como cada \textit{kernel} acessa a memória. O método \texttt{parallel\_for} expressa o paralelismo de dados, e uma expressão lambda define o corpo do \textit{kernel}.
 
@@ -223,7 +235,7 @@ Também é suportado uso de \textit{Unified Shared Memory} (USM) para acesso dir
 
 Exemplo de soma vetorial em SYCL com USM:
 
-\begin{minted}{cpp}
+\begin{verbatim}
 queue q;
 
 size_t size = N * sizeof(float);
@@ -239,4 +251,4 @@ q.parallel_for(range<1>(N), [=](id<1> idx) {
 }).wait();
 
 q.memcpy(C, memC, size).wait();
-\end{minted}
+\end{verbatim}
