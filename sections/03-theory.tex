@@ -163,15 +163,14 @@ No modelo CUDA, o código executado na GPU é denominado \textit{kernel}, que é
 O modelo de memória CUDA é composto por diferentes tipos de memória com características distintas de latência e largura de banda: memória global (acessível por todas as \textit{threads}, mas com alta latência), memória compartilhada (rápida, mas limitada a um bloco de \textit{threads}), registradores (privados a cada \textit{thread}) e memória constante.
 
 Um exemplo clássico de aplicação CUDA é a soma vetorial, onde dois vetores \(A\) e \(B\) de tamanho \(N\) são somados elemento a elemento para produzir um vetor \(C\):
-
-\begin{verbatim}
-__global__ void vectorAdd(float *A, float *B, float *C, int N) {
+\begin{lstlisting}[caption={Exemplo de soma vetorial em CUDA.}, label={lst:cuda-vector-add}]
+__global__ void vectorAdd(float* A, float* B, float* C, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < N) {
         C[idx] = A[idx] + B[idx];
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 Neste exemplo, cada \textit{thread} calcula a soma de um único elemento dos vetores de entrada. A expressão \texttt{blockIdx.x * blockDim.x + threadIdx.x} determina o índice global da \textit{thread}, garantindo que cada elemento seja processado exatamente uma vez.
 
@@ -184,18 +183,14 @@ Diferentemente do CUDA, específico para GPUs NVIDIA, OpenCL adota uma abordagem
 O modelo de memória OpenCL define quatro regiões distintas: memória global, memória constante, memória local (equivalente à memória compartilhada do CUDA) e memória privada. O modelo de execução organiza \textit{work-items} (equivalente a \textit{threads} no CUDA) em \textit{work-groups} (equivalente a blocos)~\cite{opencl2025}.
 
 Um exemplo equivalente de soma vetorial em OpenCL seria:
-
-\begin{verbatim}
-__kernel void vectorAdd(__global float *A,
-                        __global float *B,
-                        __global float *C,
-                        int N) {
+\begin{lstlisting}[caption={Exemplo de soma vetorial em OpenCL.}, label={lst:opencl-vector-add}]
+__kernel void vectorAdd(__global float* A, __global float* B, __global float* C, int N) {
     int idx = get_global_id(0);
     if (idx < N) {
         C[idx] = A[idx] + B[idx];
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 O qualificador \texttt{\_\_global} indica que os ponteiros apontam para memória global do dispositivo, e \texttt{get\_global\_id(0)} retorna o identificador global do \textit{work-item} na dimensão 0.
 
@@ -211,7 +206,7 @@ O modelo de execução SYCL utiliza filas (\texttt{queue}) para submeter trabalh
 
 Exemplo de soma vetorial em SYCL com \textit{buffers}:
 
-\begin{verbatim}
+\begin{lstlisting}[caption={Exemplo de soma vetorial em SYCL utilizando \textit{buffers}.}, label={lst:sycl-buffer-vector-add}]
 queue q;
 
 buffer<float> bufA(A, N);
@@ -227,7 +222,7 @@ q.submit([&](handler &h) {
         accC[idx] = accA[idx] + accB[idx];
     });
 });
-\end{verbatim}
+\end{lstlisting}
 
 Neste exemplo, os \textit{buffers} encapsulam os dados e os \textit{accessors} declaram como cada \textit{kernel} acessa a memória. O método \texttt{parallel\_for} expressa o paralelismo de dados, e uma expressão lambda define o corpo do \textit{kernel}.
 
@@ -235,13 +230,13 @@ Também é suportado uso de \textit{Unified Shared Memory} (USM) para acesso dir
 
 Exemplo de soma vetorial em SYCL com USM:
 
-\begin{verbatim}
+\begin{lstlisting}[caption={Exemplo de soma vetorial em SYCL utilizando USM.}, label={lst:sycl-usm-vector-add}]
 queue q;
 
 size_t size = N * sizeof(float);
-float* memA = sycl::malloc_device<float>(size);
-float* memB = sycl::malloc_device<float>(size);
-float* memC = sycl::malloc_device<float>(size);
+float* memA = malloc_device<float>(size);
+float* memB = malloc_device<float>(size);
+float* memC = malloc_device<float>(size);
 
 q.memcpy(memA, A, size).wait();
 q.memcpy(memB, B, size).wait();
@@ -251,4 +246,4 @@ q.parallel_for(range<1>(N), [=](id<1> idx) {
 }).wait();
 
 q.memcpy(C, memC, size).wait();
-\end{verbatim}
+\end{lstlisting}
