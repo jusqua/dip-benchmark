@@ -17,7 +17,6 @@
 namespace ch = std::chrono;
 namespace fs = std::filesystem;
 
-// Function to measure execution time
 template <typename Func>
 std::tuple<double, double> measure_time(const Func& func, size_t rounds) {
     auto time_start_once = ch::high_resolution_clock::now();
@@ -33,7 +32,7 @@ std::tuple<double, double> measure_time(const Func& func, size_t rounds) {
     vglClFlush();
 
     double once_duration = ch::duration<double>(time_end_once - time_start_once).count();
-    double times_duration = ch::duration<double>(time_end_times - time_start_times).count();
+    double times_duration = ch::duration<double>(time_end_times - time_start_times).count() / rounds;
 
     return { once_duration, times_duration };
 }
@@ -78,7 +77,6 @@ int main(int argc, char** argv) {
         return 3;
     }
 
-    // Create output directory if it doesn't exist
     if (!fs::exists(outpath)) {
         fs::create_directories(outpath);
     }
@@ -127,9 +125,6 @@ int main(int argc, char** argv) {
     operations.push_back({ "Erosion (3x3 Cross Kernel)", "erosion-cross", [&] { vglClErode(img, out, cross_mask, 3, 3); } });
     operations.push_back({ "Erosion (3x3 Square Kernel)", "erosion-square", [&] { vglClErode(img, out, square_mask, 3, 3); } });
     operations.push_back({ "Erosion (1x3+3x1 Square Separated Kernel)", "erosion-square-separated", [&] { vglClErode(img, aux, square_mask_sep, 1, 3); vglClErode(aux, out, square_mask_sep, 3, 1); } });
-    operations.push_back({ "Dilation (3x3 Cross Kernel)", "dilation-cross", [&] { vglClDilate(img, out, cross_mask, 3, 3); } });
-    operations.push_back({ "Dilation (3x3 Square Kernel)", "dilation-square", [&] { vglClDilate(img, out, square_mask, 3, 3); } });
-    operations.push_back({ "Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", [&] { vglClDilate(img, aux, square_mask_sep, 1, 3); vglClDilate(aux, out, square_mask_sep, 3, 1); } });
     operations.push_back({ "Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", [&] { vglClConvolution(img, out, blur_3x3_mask, 3, 3); } });
     operations.push_back({ "Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", [&] { vglClConvolution(img, out, blur_3x3_mask_sep, 1, 3); vglClConvolution(img, out, blur_3x3_mask_sep, 3, 1); } });
     operations.push_back({ "Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", [&] { vglClConvolution(img, out, blur_5x5_mask, 5, 5); } });
