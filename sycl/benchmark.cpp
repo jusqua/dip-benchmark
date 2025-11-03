@@ -29,13 +29,11 @@ std::tuple<double, double> measure_time(const Func& func, size_t rounds) {
     auto time_end_once = ch::high_resolution_clock::now();
 
     auto time_start_times = ch::high_resolution_clock::now();
-    for (size_t i = 0; i < rounds; ++i) {
-        func();
-    }
+    for (size_t i = 0; i < rounds; ++i) func();
     auto time_end_times = ch::high_resolution_clock::now();
 
     double once_duration = ch::duration<double>(time_end_once - time_start_once).count();
-    double times_duration = ch::duration<double>(time_end_times - time_start_times).count();
+    double times_duration = ch::duration<double>(time_end_times - time_start_times).count() / rounds;
 
     return { once_duration, times_duration };
 }
