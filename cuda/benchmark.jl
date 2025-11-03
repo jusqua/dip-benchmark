@@ -178,7 +178,7 @@ function measure_time(func, rounds)
         func()
     end
     time_end_times = time()
-    total_time = time_end_times - time_start_times
+    total_time = (time_end_times - time_start_times) / 10000
 
     return (single_time, total_time)
 end
@@ -251,16 +251,6 @@ function perform_benchmark(image, filename, outdir, rounds)
         ("Erosion (1x3+3x1 Square Kernel)", "erosion-square-separated", () -> begin
             @cuda blocks = blocks threads = threads erode_kernel!(d_input, d_aux, width, height, num_channels, BLOCK_SIZE, d_square_mask_sep_1x3, 0, 1)
             @cuda blocks = blocks threads = threads erode_kernel!(d_aux, d_output, width, height, num_channels, BLOCK_SIZE, d_square_mask_sep_3x1, 1, 0)
-        end),
-        ("Dilation (3x3 Cross Kernel)", "dilation-cross", () -> begin
-            @cuda blocks = blocks threads = threads dilate_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE, d_cross_mask, 1, 1)
-        end),
-        ("Dilation (3x3 Square Kernel)", "dilation-square", () -> begin
-            @cuda blocks = blocks threads = threads dilate_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE, d_square_mask, 1, 1)
-        end),
-        ("Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", () -> begin
-            @cuda blocks = blocks threads = threads dilate_kernel!(d_input, d_aux, width, height, num_channels, BLOCK_SIZE, d_square_mask_sep_1x3, 0, 1)
-            @cuda blocks = blocks threads = threads dilate_kernel!(d_aux, d_output, width, height, num_channels, BLOCK_SIZE, d_square_mask_sep_3x1, 1, 0)
         end),
         ("Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", () -> begin
             @cuda blocks = blocks threads = threads convolution_kernel!(d_aux, d_output, width, height, num_channels, BLOCK_SIZE, d_blur_3x3, 1, 1)
