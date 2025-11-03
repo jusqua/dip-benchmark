@@ -23,11 +23,11 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 
 **NVIDIA GeForce RTX 5060 Ti**
 
-|         | Version      |
-|---------|:------------:|
-| Driver  | 580.95.05    |
-| CUDA    | 13.0.88      |
-| OpenCL  | 3.0          |
+|         | Version   |
+|---------|:---------:|
+| Driver  | 580.95.05 |
+| CUDA    | 13.0.88   |
+| OpenCL  | 3.0       |
 
 ### Benchmark results
 
@@ -39,11 +39,11 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 
 #### [CUDA](benchmarks/cuda/)
 
-|         | Version      |
-|---------|:------------:|
-| Julia   | 1.12.1       |
-| CUDA    | CUDA 13.0.88 |
-| CUDA.jl | 5.9.2        |
+|         | Version |
+|---------|:-------:|
+| Julia   | 1.12.1  |
+| CUDA    | 13.0.88 |
+| CUDA.jl | 5.9.2   |
 
 | Operations                                 | Once               | Repeatedly                |
 |--------------------------------------------|-------------------:|--------------------------:|
@@ -64,11 +64,11 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 
 #### [OpenCV](benchmarks/opencv/)
 
-|        | Version                 |
-|--------|:-----------------------:|
-| Python | 3.13.7                  |
-| OpenCL | OpenCL 3.0 CUDA 13.0.88 |
-| OpenCV | 4.10                    |
+|        | Version |
+|--------|:-------:|
+| Python | 3.13.7  |
+| OpenCL | 3.0     |
+| OpenCV | 4.10.0  |
 
 | Operations                                 | Once               | Repeatedly                |
 |--------------------------------------------|-------------------:|--------------------------:|
@@ -91,7 +91,7 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 
 |        | Version        |
 |--------|:--------------:|
-| CUDA   | CUDA 13.0.88   |
+| CUDA   | 13.0.88        |
 | MATLAB | 25.1.0.2943329 |
 
 | Operations                                 | Once               | Repeatedly                |
@@ -113,11 +113,11 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 
 #### [SYCL](benchmarks/sycl/)
 
-|             | Version          |
-|-------------|:----------------:|
-| Clang       | 20.1.8           |
-| CUDA        | CUDA 13.0.88     |
-| AdaptiveCPP | develop 3992a120 |
+|             | Version         |
+|-------------|:---------------:|
+| Clang       | 20.1.8          |
+| CUDA        | 13.0.88         |
+| AdaptiveCPP | commit 3992a120 |
 
 | Operations                                 | Once               | Repeatedly                |
 |--------------------------------------------|-------------------:|--------------------------:|
@@ -138,11 +138,11 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 
 #### [VisionGL](benchmarks/visiongl/)
 
-|             | Version                 |
-|-------------|:-----------------------:|
-| Clang       | 20.1.8                  |
-| OpenCL      | OpenCL 3.0 CUDA 13.0.88 |
-| VisionGL    | develop 4507817         |
+|             | Version        |
+|-------------|:--------------:|
+| Clang       | 20.1.8         |
+| OpenCL      | 3.0            |
+| VisionGL    | commit 4507817 |
 
 | Operations                                 | Once               | Repeatedly                |
 |--------------------------------------------|-------------------:|--------------------------:|
