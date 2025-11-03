@@ -32,9 +32,6 @@ function benchmark(infile, outdir, rounds)
         {@() erodeOperation(gpuImg, cross), 'Erosion (3x3 Cross Kernel)', 'erosion-cross'};
         {@() erodeOperation(gpuImg, square), 'Erosion (3x3 Square Kernel)', 'erosion-square'};
         {@() erodeSeparatedOperation(gpuImg, square_sep_1x3, square_sep_3x1), 'Erosion (1x3+3x1 Square Kernel)', 'erosion-square-separated'};
-        {@() dilateOperation(gpuImg, cross), 'Dilation (3x3 Cross Kernel)', 'dilation-cross'};
-        {@() dilateOperation(gpuImg, square), 'Dilation (3x3 Square Kernel)', 'dilation-square'};
-        {@() dilateSeparatedOperation(gpuImg, square_sep_1x3, square_sep_3x1), 'Dilation (1x3+3x1 Square Kernel)', 'dilation-square-separated'};
         {@() convOperation(gpuImg, blur3), 'Convolution (3x3 Gaussian Blur Kernel)', 'convolution-gaussian-blur-3x3'};
         {@() convSeparatedOperation(gpuImg, blur3_1x3, blur3_3x1), 'Convolution (1x3+3x1 Gaussian Blur Kernel)', 'convolution-gaussian-blur-3x3-separated'};
         {@() convOperation(gpuImg, blur5), 'Convolution (5x5 Gaussian Blur Kernel)', 'convolution-gaussian-blur-5x5'};
@@ -109,7 +106,7 @@ function [onceTime, totalTime, result] = measureTime(operation, rounds)
         operation();
     end
     wait(gpuDevice);
-    totalTime = toc;
+    totalTime = toc / rounds;
 end
 
 function saveResult(result, basePath, opName)
@@ -148,8 +145,7 @@ function y = uploadOperation(x), y = gpuArray(x); end
 
 function y = downloadOperation(x), y = gather(x); end
 
-% No COW operation in GPU so this works as a deep copy
-function y = copyOperation(x), y = x; end
+function y = copyOperation(x), y = gpuArray(x); end
 
 function y = inversionOperation(x), y = imcomplement(x); end
 
@@ -164,14 +160,8 @@ end
 
 function y = erodeOperation(x, se), y = imerode(x, se); end
 
-function y = dilateOperation(x, se), y = imdilate(x, se); end
-
 function y = erodeSeparatedOperation(x, se1, se2)
     y = imerode(imerode(x, se1), se2);
-end
-
-function y = dilateSeparatedOperation(x, se1, se2)
-    y = imdilate(imdilate(x, se1), se2);
 end
 
 function y = convOperation(x, k), y = imfilter(x, k, 'conv'); end
