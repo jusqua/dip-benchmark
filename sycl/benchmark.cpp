@@ -14,11 +14,6 @@
 namespace ch = std::chrono;
 namespace fs = std::filesystem;
 
-enum MORPHOLOGY_TYPE {
-    EROSION,
-    DILATION
-};
-
 int computing_units_selector_v(const sycl::device& dev) {
     if (dev.has(sycl::aspect::cpu)) {
         return -1;
@@ -27,7 +22,6 @@ int computing_units_selector_v(const sycl::device& dev) {
     return dev.get_info<sycl::info::device::max_compute_units>();
 }
 
-// Function to measure execution time
 template <typename Func>
 std::tuple<double, double> measure_time(const Func& func, size_t rounds) {
     auto time_start_once = ch::high_resolution_clock::now();
@@ -46,8 +40,8 @@ std::tuple<double, double> measure_time(const Func& func, size_t rounds) {
     return { once_duration, times_duration };
 }
 
-class InvertFunctor {
-private:
+class Kernel {
+protected:
     uint8_t* input;
     uint8_t* output;
     size_t width;
@@ -55,14 +49,18 @@ private:
     size_t channels;
 
 public:
-    InvertFunctor(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c)
+    Kernel(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c)
         : input(in), output(out), width(w), height(h), channels(c) {}
+};
+
+class InvertKernel : public Kernel {
+public:
+    using Kernel::Kernel;
 
     void operator()(sycl::nd_item<2> item) const {
         size_t y = item.get_global_id(0);
         size_t x = item.get_global_id(1);
 
-        // Bounds check
         if (y >= height || x >= width) return;
 
         for (size_t c = 0; c < channels; ++c) {
@@ -72,59 +70,42 @@ public:
     }
 };
 
-class GrayscaleFunctor {
-private:
-    uint8_t* input;
-    uint8_t* output;
-    size_t width;
-    size_t height;
-    size_t channels;
-
+class GrayscaleKernel : public Kernel {
 public:
-    GrayscaleFunctor(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c)
-        : input(in), output(out), width(w), height(h), channels(c) {}
+    using Kernel::Kernel;
 
     void operator()(sycl::nd_item<2> item) const {
         size_t y = item.get_global_id(0);
         size_t x = item.get_global_id(1);
 
-        // Bounds check
         if (y >= height || x >= width) return;
 
         size_t pixel_idx = (y * width + x) * channels;
-        // Using BT.709 coefficients for RGB->Gray conversion
         uint8_t gray = static_cast<uint8_t>(
             0.0722f * input[pixel_idx] +      // B
             0.7152f * input[pixel_idx + 1] +  // G
             0.2126f * input[pixel_idx + 2]    // R
         );
 
-        // Set all channels to grayscale value
         for (size_t c = 0; c < channels; ++c) {
             output[pixel_idx + c] = gray;
         }
     }
 };
 
-class ThresholdFunctor {
+class ThresholdKernel : public Kernel {
 private:
-    uint8_t* input;
-    uint8_t* output;
-    size_t width;
-    size_t height;
-    size_t channels;
     uint8_t threshold;
     uint8_t max_value;
 
 public:
-    ThresholdFunctor(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c, uint8_t t, uint8_t mv)
-        : input(in), output(out), width(w), height(h), channels(c), threshold(t), max_value(mv) {}
+    ThresholdKernel(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c, uint8_t t, uint8_t mv)
+        : Kernel(in, out, w, h, c), threshold(t), max_value(mv) {}
 
     void operator()(sycl::nd_item<2> item) const {
         size_t y = item.get_global_id(0);
         size_t x = item.get_global_id(1);
 
-        // Bounds check
         if (y >= height || x >= width) return;
 
         for (size_t c = 0; c < channels; ++c) {
@@ -134,61 +115,41 @@ public:
     }
 };
 
-template <MORPHOLOGY_TYPE T>
-class MorphologyFunctor {
+class ErosionKernel : public Kernel {
 private:
-    uint8_t* input;
-    uint8_t* output;
-    size_t width;
-    size_t height;
-    size_t channels;
     bool* mask;
     size_t mask_width;
     size_t mask_height;
 
 public:
-    MorphologyFunctor(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c, bool* m, size_t mw, size_t mh)
-        : input(in), output(out), width(w), height(h), channels(c), mask(m), mask_width(mw), mask_height(mh) {}
+    ErosionKernel(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c, bool* m, size_t mw, size_t mh)
+        : Kernel(in, out, w, h, c), mask(m), mask_width(mw), mask_height(mh) {}
 
     void operator()(sycl::nd_item<2> item) const {
         size_t y = item.get_global_id(0);
         size_t x = item.get_global_id(1);
 
-        // Bounds check
         if (y >= height || x >= width) return;
 
         for (size_t c = 0; c < channels; ++c) {
-            uint8_t result;
-            if constexpr (T == MORPHOLOGY_TYPE::EROSION) {
-                result = 255;
-            } else if constexpr (T == MORPHOLOGY_TYPE::DILATION) {
-                result = 0;
-            }
+            uint8_t result = 255;
 
             for (size_t my = 0; my < mask_height; ++my) {
                 for (size_t mx = 0; mx < mask_width; ++mx) {
-                    // Get mask value
                     bool mask_val = mask[my * mask_width + mx];
                     if (!mask_val) continue;
 
-                    // Compute image coordinates with mirroring at borders
                     int iy = y + my - mask_height / 2;
                     int ix = x + mx - mask_width / 2;
 
-                    // Handle border cases with mirroring
                     if (iy < 0) iy = -iy;
                     if (ix < 0) ix = -ix;
                     if (iy >= static_cast<int>(height)) iy = 2 * height - iy - 1;
                     if (ix >= static_cast<int>(width)) ix = 2 * width - ix - 1;
 
-                    // Get pixel value
                     uint8_t pixel = input[(iy * width + ix) * channels + c];
 
-                    if constexpr (T == MORPHOLOGY_TYPE::EROSION) {
-                        result = sycl::min(result, pixel);
-                    } else if constexpr (T == MORPHOLOGY_TYPE::DILATION) {
-                        result = sycl::max(result, pixel);
-                    }
+                    result = sycl::min(result, pixel);
                 }
             }
 
@@ -197,26 +158,20 @@ public:
     }
 };
 
-class ConvolutionFunctor {
+class ConvolutionKernel : public Kernel {
 private:
-    uint8_t* input;
-    uint8_t* output;
-    size_t width;
-    size_t height;
-    size_t channels;
     float* kernel;
     size_t kernel_width;
     size_t kernel_height;
 
 public:
-    ConvolutionFunctor(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c, float* k, size_t kw, size_t kh)
-        : input(in), output(out), width(w), height(h), channels(c), kernel(k), kernel_width(kw), kernel_height(kh) {}
+    ConvolutionKernel(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c, float* k, size_t kw, size_t kh)
+        : Kernel(in, out, w, h, c), kernel(k), kernel_width(kw), kernel_height(kh) {}
 
     void operator()(sycl::nd_item<2> item) const {
         size_t y = item.get_global_id(0);
         size_t x = item.get_global_id(1);
 
-        // Bounds check
         if (y >= height || x >= width) return;
 
         for (size_t c = 0; c < channels; ++c) {
@@ -224,28 +179,22 @@ public:
 
             for (size_t ky = 0; ky < kernel_height; ++ky) {
                 for (size_t kx = 0; kx < kernel_width; ++kx) {
-                    // Compute image coordinates with mirroring at borders
                     int iy = y + ky - kernel_height / 2;
                     int ix = x + kx - kernel_width / 2;
 
-                    // Handle border cases with mirroring
                     if (iy < 0) iy = -iy;
                     if (ix < 0) ix = -ix;
                     if (iy >= static_cast<int>(height)) iy = 2 * height - iy - 1;
                     if (ix >= static_cast<int>(width)) ix = 2 * width - ix - 1;
 
-                    // Get kernel value
                     float kernel_val = kernel[ky * kernel_width + kx];
 
-                    // Get pixel value
                     uint8_t pixel = input[(iy * width + ix) * channels + c];
 
-                    // Accumulate
                     sum += kernel_val * pixel;
                 }
             }
 
-            // Clamp to [0, 255]
             int result = static_cast<int>(sum + 0.5f);
             result = sycl::clamp(0, result, 255);
 
@@ -254,32 +203,25 @@ public:
     }
 };
 
-class GaussianBlur3x3Functor {
+class GaussianBlur3x3Kernel : public Kernel {
 private:
-    uint8_t* input;
-    uint8_t* output;
-    size_t width;
-    size_t height;
-    size_t channels;
-    const constexpr static float kernel[9] = {
+    constexpr static float kernel[9] = {
         // clang-format off
         1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f,
         2.0f / 16.0f, 4.0f / 16.0f, 2.0f / 16.0f,
         1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f
         // clang-format on
     };
-    const constexpr static size_t kernel_width = 3;
-    const constexpr static size_t kernel_height = 3;
+    constexpr static size_t kernel_width = 3;
+    constexpr static size_t kernel_height = 3;
 
 public:
-    GaussianBlur3x3Functor(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c)
-        : input(in), output(out), width(w), height(h), channels(c) {}
+    using Kernel::Kernel;
 
     void operator()(sycl::nd_item<2> item) const {
         size_t y = item.get_global_id(0);
         size_t x = item.get_global_id(1);
 
-        // Bounds check
         if (y >= height || x >= width) return;
 
         for (size_t c = 0; c < channels; ++c) {
@@ -287,28 +229,22 @@ public:
 
             for (size_t ky = 0; ky < kernel_height; ++ky) {
                 for (size_t kx = 0; kx < kernel_width; ++kx) {
-                    // Compute image coordinates with mirroring at borders
                     int iy = y + ky - kernel_height / 2;
                     int ix = x + kx - kernel_width / 2;
 
-                    // Handle border cases with mirroring
                     if (iy < 0) iy = -iy;
                     if (ix < 0) ix = -ix;
                     if (iy >= static_cast<int>(height)) iy = 2 * height - iy - 1;
                     if (ix >= static_cast<int>(width)) ix = 2 * width - ix - 1;
 
-                    // Get kernel value
                     float kernel_val = kernel[ky * kernel_width + kx];
 
-                    // Get pixel value
                     uint8_t pixel = input[(iy * width + ix) * channels + c];
 
-                    // Accumulate
                     sum += kernel_val * pixel;
                 }
             }
 
-            // Clamp to [0, 255]
             int result = static_cast<int>(sum + 0.5f);
             result = sycl::clamp(0, result, 255);
 
@@ -323,17 +259,13 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     size_t channels = image.channels();
     size_t total_size = width * height * channels;
 
-    // Prepare device buffers
     uint8_t* d_input = sycl::malloc_device<uint8_t>(total_size, q);
     uint8_t* d_aux = sycl::malloc_device<uint8_t>(total_size, q);
     uint8_t* d_output = sycl::malloc_device<uint8_t>(total_size, q);
 
-    // Copy input image to device
     q.memcpy(d_input, image.data, total_size).wait();
 
-    // Prepare masks for morphological operations
-    // Cross mask (3x3)
-    const constexpr bool cross_mask[9] = {
+    constexpr bool cross_mask[9] = {
         // clang-format off
         0, 1, 0,
         1, 1, 1,
@@ -343,8 +275,7 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     bool* d_cross_mask = sycl::malloc_device<bool>(9, q);
     q.memcpy(d_cross_mask, cross_mask, 9 * sizeof(bool)).wait();
 
-    // Square mask (3x3)
-    const constexpr bool square_mask[9] = {
+    constexpr bool square_mask[9] = {
         // clang-format off
         1, 1, 1,
         1, 1, 1,
@@ -353,13 +284,12 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     };
     bool* d_square_mask = sycl::malloc_device<bool>(9, q);
     q.memcpy(d_square_mask, square_mask, 9 * sizeof(bool)).wait();
-    
-    const constexpr bool square_mask_sep[3] = { 1, 1, 1 };
+
+    constexpr bool square_mask_sep[3] = { 1, 1, 1 };
     bool* d_square_mask_sep = sycl::malloc_device<bool>(3, q);
     q.memcpy(d_square_mask_sep, square_mask_sep, 3 * sizeof(bool)).wait();
 
-    // Blur 3x3 mask
-    const constexpr float blur_3x3_mask[9] = {
+    constexpr float blur_3x3_mask[9] = {
         // clang-format off
         1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f,
         2.0f / 16.0f, 4.0f / 16.0f, 2.0f / 16.0f,
@@ -368,13 +298,12 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     };
     float* d_blur_3x3_mask = sycl::malloc_device<float>(9, q);
     q.memcpy(d_blur_3x3_mask, blur_3x3_mask, 9 * sizeof(float)).wait();
-    
-    const constexpr float blur_3x3_mask_sep[] = { 1.0f / 4.0f, 1.0f / 2.0f, 1.0f / 4.0f };
+
+    constexpr float blur_3x3_mask_sep[] = { 1.0f / 4.0f, 1.0f / 2.0f, 1.0f / 4.0f };
     float* d_blur_3x3_mask_sep = sycl::malloc_device<float>(3, q);
     q.memcpy(d_blur_3x3_mask_sep, blur_3x3_mask_sep, 3 * sizeof(float)).wait();
 
-    // Blur 5x5 mask
-    const constexpr float blur_5x5_mask[25] = {
+    constexpr float blur_5x5_mask[25] = {
         // clang-format off
         1.0f / 256.0f,  4.0f / 256.0f,  6.0f / 256.0f,  4.0f / 256.0f, 1.0f / 256.0f,
         4.0f / 256.0f, 16.0f / 256.0f, 24.0f / 256.0f, 16.0f / 256.0f, 4.0f / 256.0f,
@@ -385,15 +314,13 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     };
     float* d_blur_5x5_mask = sycl::malloc_device<float>(25, q);
     q.memcpy(d_blur_5x5_mask, blur_5x5_mask, 25 * sizeof(float)).wait();
-    
-    const constexpr float blur_5x5_mask_sep[] = { 1.0f / 16.0f, 4.0f / 16.0f, 6.0f / 16.0f, 4.0f / 16.0f, 1.0f / 16.0f };
+
+    constexpr float blur_5x5_mask_sep[] = { 1.0f / 16.0f, 4.0f / 16.0f, 6.0f / 16.0f, 4.0f / 16.0f, 1.0f / 16.0f };
     float* d_blur_5x5_mask_sep = sycl::malloc_device<float>(5, q);
     q.memcpy(d_blur_5x5_mask_sep, blur_5x5_mask_sep, 5 * sizeof(float)).wait();
 
-    // Buffer for result retrieval
     std::vector<uint8_t> result_buffer(total_size);
 
-    // Determine workgroup size based on device capabilities
     size_t wg_size = std::min(size_t(16), q.get_device().get_info<sycl::info::device::max_work_group_size>());
     sycl::range<2> global_range(height, width);
     sycl::range<2> local_range(wg_size, wg_size);
@@ -402,42 +329,36 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     sycl::nd_range<2> kernel_range(global_range, local_range);
 
     std::vector<std::tuple<std::string, std::string, std::function<void()>>> operations;
+
     operations.push_back({ "Upload", "", [&] { q.memcpy(d_input, image.data, total_size).wait(); } });
     operations.push_back({ "Download", "", [&] { q.memcpy(result_buffer.data(), d_input, total_size).wait(); } });
     operations.push_back({ "Copy", "copy", [&] { q.memcpy(d_output, d_input, total_size).wait(); } });
 
-    operations.push_back({ "Invertion", "invertion", [&] { q.parallel_for(kernel_range, InvertFunctor(d_input, d_output, width, height, channels)).wait(); } });
-    operations.push_back({ "Grayscale", "grayscale", [&] { q.parallel_for(kernel_range, GrayscaleFunctor(d_input, d_output, width, height, channels)).wait(); } });
-    operations.push_back({ "Threshold", "threshold", [&] { q.parallel_for(kernel_range, ThresholdFunctor(d_input, d_output, width, height, channels, 127, 255)).wait(); } });
+    operations.push_back({ "Invertion", "invertion", [&] { q.parallel_for(kernel_range, InvertKernel(d_input, d_output, width, height, channels)).wait(); } });
+    operations.push_back({ "Grayscale", "grayscale", [&] { q.parallel_for(kernel_range, GrayscaleKernel(d_input, d_output, width, height, channels)).wait(); } });
+    operations.push_back({ "Threshold", "threshold", [&] { q.parallel_for(kernel_range, ThresholdKernel(d_input, d_output, width, height, channels, 127, 255)).wait(); } });
 
-    operations.push_back({ "Erosion (3x3 Cross Kernel)", "erosion-cross", [&] { q.parallel_for(kernel_range, MorphologyFunctor<EROSION>(d_input, d_output, width, height, channels, d_cross_mask, 3, 3)).wait(); } });
-    operations.push_back({ "Erosion (3x3 Square Kernel)", "erosion-square", [&] { q.parallel_for(kernel_range, MorphologyFunctor<EROSION>(d_input, d_output, width, height, channels, d_square_mask, 3, 3)).wait(); } });
+    operations.push_back({ "Erosion (3x3 Cross Kernel)", "erosion-cross", [&] { q.parallel_for(kernel_range, ErosionKernel(d_input, d_output, width, height, channels, d_cross_mask, 3, 3)).wait(); } });
+    operations.push_back({ "Erosion (3x3 Square Kernel)", "erosion-square", [&] { q.parallel_for(kernel_range, ErosionKernel(d_input, d_output, width, height, channels, d_square_mask, 3, 3)).wait(); } });
     operations.push_back({ "Erosion (1x3+3x1 Square Kernel)", "erosion-square-separated", [&] {
-        q.parallel_for(kernel_range, MorphologyFunctor<EROSION>(d_input, d_aux, width, height, channels, d_square_mask_sep, 1, 3)).wait();
-        q.parallel_for(kernel_range, MorphologyFunctor<EROSION>(d_aux, d_output, width, height, channels, d_square_mask_sep, 3, 1)).wait();
+        q.parallel_for(kernel_range, ErosionKernel(d_input, d_aux, width, height, channels, d_square_mask_sep, 1, 3)).wait();
+        q.parallel_for(kernel_range, ErosionKernel(d_aux, d_output, width, height, channels, d_square_mask_sep, 3, 1)).wait();
     }});
 
-    operations.push_back({ "Dilation (3x3 Cross Kernel)", "dilation-cross", [&] { q.parallel_for(kernel_range, MorphologyFunctor<DILATION>(d_input, d_output, width, height, channels, d_cross_mask, 3, 3)).wait(); } });
-    operations.push_back({ "Dilation (3x3 Square Kernel)", "dilation-square", [&] { q.parallel_for(kernel_range, MorphologyFunctor<DILATION>(d_input, d_output, width, height, channels, d_square_mask, 3, 3)).wait(); } });
-    operations.push_back({ "Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", [&] {
-        q.parallel_for(kernel_range, MorphologyFunctor<DILATION>(d_input, d_aux, width, height, channels, d_square_mask_sep, 1, 3)).wait();
-        q.parallel_for(kernel_range, MorphologyFunctor<DILATION>(d_aux, d_output, width, height, channels, d_square_mask_sep, 3, 1)).wait();
-    }});
-
-    operations.push_back({ "Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", [&]() { q.parallel_for(kernel_range, ConvolutionFunctor(d_input, d_output, width, height, channels, d_blur_3x3_mask, 3, 3)).wait(); } });
+    operations.push_back({ "Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", [&]() { q.parallel_for(kernel_range, ConvolutionKernel(d_input, d_output, width, height, channels, d_blur_3x3_mask, 3, 3)).wait(); } });
     operations.push_back({ "Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", [&]() {
-        q.parallel_for(kernel_range, ConvolutionFunctor(d_input, d_aux, width, height, channels, d_blur_3x3_mask_sep, 1, 3)).wait();
-        q.parallel_for(kernel_range, ConvolutionFunctor(d_aux, d_output, width, height, channels, d_blur_3x3_mask_sep, 3, 1)).wait();
+        q.parallel_for(kernel_range, ConvolutionKernel(d_input, d_aux, width, height, channels, d_blur_3x3_mask_sep, 1, 3)).wait();
+        q.parallel_for(kernel_range, ConvolutionKernel(d_aux, d_output, width, height, channels, d_blur_3x3_mask_sep, 3, 1)).wait();
     }});
 
-    operations.push_back({ "Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", [&]() { q.parallel_for(kernel_range, ConvolutionFunctor(d_input, d_output, width, height, channels, d_blur_5x5_mask, 5, 5)).wait(); } });
+    operations.push_back({ "Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", [&]() { q.parallel_for(kernel_range, ConvolutionKernel(d_input, d_output, width, height, channels, d_blur_5x5_mask, 5, 5)).wait(); } });
     operations.push_back({ "Convolution (1x5+5x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5-separated", [&]() {
-        q.parallel_for(kernel_range, ConvolutionFunctor(d_input, d_aux, width, height, channels, d_blur_5x5_mask_sep, 1, 5)).wait();
-        q.parallel_for(kernel_range, ConvolutionFunctor(d_aux, d_output, width, height, channels, d_blur_5x5_mask_sep, 5, 1)).wait();
+        q.parallel_for(kernel_range, ConvolutionKernel(d_input, d_aux, width, height, channels, d_blur_5x5_mask_sep, 1, 5)).wait();
+        q.parallel_for(kernel_range, ConvolutionKernel(d_aux, d_output, width, height, channels, d_blur_5x5_mask_sep, 5, 1)).wait();
     }});
 
-    operations.push_back({ "Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", [&]() { q.parallel_for(kernel_range, GaussianBlur3x3Functor(d_input, d_output, width, height, channels)).wait(); } });
-    
+    operations.push_back({ "Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", [&]() { q.parallel_for(kernel_range, GaussianBlur3x3Kernel(d_input, d_output, width, height, channels)).wait(); } });
+
     auto biggest_description_length = 0;
     for (const auto& operation : operations) {
         biggest_description_length = std::max(biggest_description_length, static_cast<int>(std::get<0>(operation).length()));
