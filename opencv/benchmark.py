@@ -35,7 +35,7 @@ def measure_time(func: Callable[[], Any], rounds: int) -> tuple[float, float]:
         _round += 1
     time_end_times = perf_counter()
 
-    return (time_end_once - time_start_once, time_end_times - time_start_times)
+    return (time_end_once - time_start_once, (time_end_times - time_start_times) / rounds)
 
 
 def perform_benchmark(cpu_image: cv.typing.MatLike, filename: str, dir: str, rounds: int):
@@ -98,9 +98,6 @@ def perform_benchmark(cpu_image: cv.typing.MatLike, filename: str, dir: str, rou
     operations.append(("Erosion (3x3 Cross Kernel)", "erosion-cross", lambda: cv.erode(image, cross_mask, sample)))
     operations.append(("Erosion (3x3 Square Kernel)", "erosion-square", lambda: cv.erode(image, square_mask, sample)))
     operations.append(("Erosion (1x3+3x1 Square Kernel)", "erosion-square-separated", erosion_separated))
-    operations.append(("Dilation (3x3 Cross Kernel)", "dilation-cross", lambda: cv.dilate(image, cross_mask, sample)))
-    operations.append(("Dilation (3x3 Square Kernel)", "dilation-square", lambda: cv.dilate(image, square_mask, sample)))
-    operations.append(("Dilation (1x3+3x1 Square Kernel)", "dilation-square-separated", dilation_separated))
     operations.append(("Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", lambda: cv.filter2D(image, -1, blur_3x3_mask, sample)))
     operations.append(("Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", convolution_3x3_separated))
     operations.append(("Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", lambda: cv.filter2D(image, -1, blur_5x5_mask, sample)))
@@ -124,14 +121,10 @@ def main():
 
     cv.ocl.setUseOpenCL(True)
 
-    parser = ArgumentParser(
-        prog="benchmark.py", description="Image processing algorithms benchmark with OpenCL acceleration"
-    )
+    parser = ArgumentParser(prog="benchmark.py", description="Image processing algorithms benchmark with OpenCL acceleration")
     parser.add_argument("infile", type=parse_image, help="Path to image file")
     parser.add_argument("outdir", type=parse_dir, help="Path to image output directory")
-    parser.add_argument(
-        "--rounds", type=int, default=10000, help="Times to be executed, default 10000"
-    )
+    parser.add_argument("--rounds", type=int, default=10000, help="Times to be executed, default 10000")
 
     args = parser.parse_args()
 
