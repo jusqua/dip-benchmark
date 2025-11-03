@@ -75,7 +75,7 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 |--------|:-----------------------:|
 | Python | 3.13.7                  |
 | OpenCL | OpenCL 3.0 CUDA 13.0.84 |
-| OpenCV | 3.13.7                  |
+| OpenCV | 4.10                    |
 
 | Operations                                 | Once               | Repeatedly                |
 |--------------------------------------------|-------------------:|--------------------------:|
