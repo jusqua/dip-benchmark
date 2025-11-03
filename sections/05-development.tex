@@ -2,36 +2,198 @@
 
 Nesta seção, serão apresentados os detalhes de implementação dos operadores de processamento de imagens em cada uma das tecnologias avaliadas. Cada subseção descreve as particularidades e desafios encontrados durante o desenvolvimento em cada tecnologia.
 
-\subsection{Implementação em SYCL com AdaptiveCPP}
+\subsection{Implementação dos operadores para SYCL}
 
-Para cada operador, foi criado um \textit{functor} para servir como \textit{kernel} de execução. O gerenciamento de memória foi realizado por meio de USM, que não abstraem a transferência de dados entre CPU e GPU.
+Para cada operador, foi criado um \textit{functor} para servir como \textit{kernel} de execução. O gerenciamento de memória foi realizado por meio de USM, que não abstraem a transferência de dados entre CPU e GPU. Para o desenvolvimento do \textit{kernel} para ser executado utilizamos a estrutura descrita em \ref{lst:sycl-kernel-struct}.
 
-% Detalhar a implementação num Functor
+\begin{lstlisting}[caption={Estrutura de um \textit{functor} para ser utilizado como \textit{kernel} para a fila SYCL.}, label={lst:sycl-kernel-struct}]
+class Kernel {
+protected:
+  uint8_t* input;
+  uint8_t* output;
+  size_t width;
+  size_t height;
+  size_t channels;
 
-\subsection{Implementação em CUDA com Julia}
+public:
+  Kernel(uint8_t* in, uint8_t* out, size_t w, size_t h, size_t c)
+    : input(in), output(out), width(w), height(h), channels(c) {}
 
-A implementação em Julia utilizou o pacote CUDA.jl, que fornece uma interface de alto nível para programação CUDA. A sintaxe de Julia permitiu escrever \textit{kernels} de forma mais concisa em comparação com CUDA em C/C++.
+  void operator()(sycl::nd_item<2> item) const {
+    // prelude
+    size_t y = item.get_global_id(0);
+    size_t x = item.get_global_id(1);
+    if (y >= height || x >= width) return;
 
-% Detalhar a implementação numa função
+    /* operator logic */
+  }
+};
+\end{lstlisting}
 
-\subsection{Implementação em OpenCV com Python}
+A seguir será apresentado a implementação da base de cada \textit{kernel} dos operadores em C++.
 
-A implementação em OpenCV utilizou a biblioteca opencv-python, que fornece \textit{bindings} Python para a biblioteca OpenCV escrita em C++. OpenCV oferece funções integradas para a maioria dos operadores de processamento de imagens e utilizamos o objeto \textit{UMat} para processamento na GPU via OpenCL.
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:inversion}.}, label={lst:sycl-inversion-kernel}]
+for (size_t c = 0; c < channels; ++c) {
+  size_t index = (y * width + x) * channels + c;
+  output[index] = 255 - input[index];
+}
+\end{lstlisting}
 
-% Detalhar a usabilidade do UMat
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:grayscale}.}, label={lst:sycl-grayscale-kernel}]
+size_t pixel_idx = (y * width + x) * channels;
+uint8_t gray = static_cast<uint8_t>(
+  0.0722f * input[pixel_idx] +      // B
+  0.7152f * input[pixel_idx + 1] +  // G
+  0.2126f * input[pixel_idx + 2]    // R
+);
 
-\subsection{Implementação em OpenCL com VisionGL}
+for (size_t c = 0; c < channels; ++c)
+  output[pixel_idx + c] = gray;
+\end{lstlisting}
 
-A implementação em OpenCL utilizou a biblioteca VisionGL como base, que já fornece uma estrutura para operadores de processamento de imagens. O trabalho consistiu em analisar os operadores existentes e garantir compatibilidade com o ambiente de benchmark.
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:thresholding}.}, label={lst:sycl-threshold-kernel}]
+for (size_t c = 0; c < channels; ++c) {
+  size_t index = (y * width + x) * channels + c;
+  output[index] = (input[index] > threshold) ? max_value : 0;
+}
+\end{lstlisting}
 
-% Detalhar a usabilidade do UMat
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:erosion}.}, label={lst:sycl-erosion-kernel}]
+for (size_t c = 0; c < channels; ++c) {
+  uint8_t result = 255;
 
-\subsection{Implementação em MATLAB}
+  for (size_t my = 0; my < mask_height; ++my) {
+    for (size_t mx = 0; mx < mask_width; ++mx) {
+      bool mask_val = mask[my * mask_width + mx];
+      if (!mask_val) continue;
 
-A implementação em MATLAB utilizou a Parallel Computing Toolbox, que permite transferir arrays para GPU utilizando a função \texttt{gpuArray} e executar operações em GPU de forma transparente.
+      int iy = y + my - mask_height/2;
+      int ix = x + mx - mask_width/2;
 
-MATLAB fornece funções nativas para processamento de imagens através do Image Processing Toolbox, que podem ser aceleradas em GPU. Funções como \texttt{rgb2gray}, \texttt{imdilate} e \texttt{imerode} foram utilizadas diretamente com arrays na GPU.
+      if (iy < 0) iy = -iy;
+      if (ix < 0) ix = -ix;
+      if (iy >= static_cast<int>(height)) iy = 2*height-iy-1;
+      if (ix >= static_cast<int>(width)) ix = 2*width-ix-1;
 
-Para operadores aritméticos simples, o MATLAB permite usar operadores nativos (+, -, *, /) diretamente em \texttt{gpuArrays}, com a execução sendo automaticamente transferida para a GPU. O código resultante é significativamente mais conciso em comparação com as outras tecnologias, mas com menos controle sobre detalhes de implementação.
+      uint8_t pixel = input[(iy*width+ix)*channels+c];
+      result = sycl::min(result, pixel);
+    }
+  }
 
-% No caso de transferência de CPU para GPU falar sobre o COW
+  output[(y*width+x)*channels+c] = result;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:convolution}.}, label={lst:sycl-convolution-kernel}]
+for (size_t c = 0; c < channels; ++c) {
+  float sum = 0.0f;
+
+  for (size_t ky = 0; ky < kernel_height; ++ky) {
+    for (size_t kx = 0; kx < kernel_width; ++kx) {
+      int iy = y + ky - kernel_height/2;
+      int ix = x + kx - kernel_width/2;
+
+      if (iy < 0) iy = -iy;
+      if (ix < 0) ix = -ix;
+      if (iy >= static_cast<int>(height)) iy = 2*height-iy-1;
+      if (ix >= static_cast<int>(width)) ix = 2*width-ix-1;
+
+      float kernel_val = kernel[ky*kernel_width+kx];
+      uint8_t pixel = input[(iy*width+ix)*channels+c];
+      sum += kernel_val * pixel;
+    }
+  }
+
+  int result = static_cast<int>(sum + 0.5f);
+  result = sycl::clamp(0, result, 255);
+  output[(y*width+x)*channels+c] = static_cast<uint8_t>(result);
+}
+\end{lstlisting}
+
+\subsection{Implementação dos operadores para CUDA}
+
+A implementação em CUDA utilizou o pacote CUDA.jl para a linguagem Julia, que fornece uma interface de alto nível para programação CUDA. Para o desenvolvimento do \textit{kernel} para ser executado utilizamos a estrutura descrita em \ref{lst:cudajl-kernel-struct}.
+
+\begin{lstlisting}[caption={Estrutura do \textit{kernel} para fila CUDA.jl.}, label={lst:cudajl-kernel-struct}]
+@inline function kernel!(input, output, width, height,
+                         num_channels, block_size)
+    # prelude
+    c = threadIdx().x
+    x = (blockIdx().x - 1) * block_size + threadIdx().y
+    y = (blockIdx().y - 1) * block_size + threadIdx().z
+    if !(1 <= x <= width
+        && 1 <= y <= height
+        && c <= num_channels) return end
+
+    # operator logic
+    # ...
+
+    # epilogue
+    return
+end
+\end{lstlisting}
+
+A seguir será apresentado a implementação da base de cada \textit{kernel} dos operadores em Julia.
+
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:inversion}.}, label={lst:cudajl-inversion-kernel}]
+output[c, x, y] = 1.0f0 - input[c, x, y]
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:grayscale}.}, label={lst:cudajl-grayscale-kernel}]
+gray = 0.299f0 * input[1, x, y]
+     + 0.587f0 * input[2, x, y]
+     + 0.114f0 * input[3, x, y]
+output[:, x, y] .= gray
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:thresholding}.}, label={lst:cudajl-threshold-kernel}]
+output[c, x, y] = input[c, x, y] > threshold_value
+                ? 1.0f0
+                : 0.0f0
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:erosion}.}, label={lst:cudajl-erosion-kernel}]
+px = input[c, x, y]
+px_sum = 0.0f0
+new_px_sum = 0.0f0
+
+for my in -m_half_height:m_half_height
+  for mx in -m_half_width:m_half_width
+    ix = x + mx
+    iy = y + my
+    if !(1 <= ix <= width
+        && 1 <= iy <= height
+        && mask[my+m_half_height+1, mx+m_half_width+1] == 1)
+      continue
+    end
+
+    new_px_sum = sum(input[c, ix, iy])
+    if (new_px_sum > px_sum)
+      px = input[c, ix, iy]
+      px_sum = new_px_sum
+    end
+  end
+end
+output[c, x, y] = px
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Implementação do operador para \Cref{eq:convolution}.}, label={lst:cudajl-convolution-kernel}]
+sum = 0.0f0
+for ky in -k_half_height:k_half_height
+  for kx in -k_half_width:k_half_width
+    ix = x + kx
+    iy = y + ky
+    if !(1 <= ix <= width && 1 <= iy <= height)
+      continue
+    end
+
+    sum += input[c, ix, iy]
+        * kernel[ky+k_half_height+1, kx+k_half_width+1]
+  end
+end
+output[c, x, y] = sum
+\end{lstlisting}
+
+\subsection{Implementação dos benchmarks}
+
+% ...
