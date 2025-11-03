@@ -332,7 +332,7 @@ void perform_benchmark(sycl::queue& q, const cv::Mat& image, const std::string& 
     operations.push_back({ "Download", "", [&] { q.memcpy(result_buffer.data(), d_input, total_size).wait(); } });
     operations.push_back({ "Copy", "copy", [&] { q.memcpy(d_output, d_input, total_size).wait(); } });
 
-    operations.push_back({ "Invertion", "invertion", [&] { q.parallel_for(kernel_range, InvertKernel(d_input, d_output, width, height, channels)).wait(); } });
+    operations.push_back({ "Inversion", "inversion", [&] { q.parallel_for(kernel_range, InvertKernel(d_input, d_output, width, height, channels)).wait(); } });
     operations.push_back({ "Grayscale", "grayscale", [&] { q.parallel_for(kernel_range, GrayscaleKernel(d_input, d_output, width, height, channels)).wait(); } });
     operations.push_back({ "Threshold", "threshold", [&] { q.parallel_for(kernel_range, ThresholdKernel(d_input, d_output, width, height, channels, 127, 255)).wait(); } });
 

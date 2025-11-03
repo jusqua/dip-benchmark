@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
     operations.push_back({ "Upload", "", [&] { vglClUpload(img); } });
     operations.push_back({ "Download", "", [&] { vglClDownload(img); } });
     operations.push_back({ "Copy", "copy", [&] { vglClCopy(img, out); } });
-    operations.push_back({ "Invertion", "invert", [&] { vglClInvert(img, out); } });
+    operations.push_back({ "Inversion", "inversion", [&] { vglClInvert(img, out); } });
     operations.push_back({ "Grayscale", "grayscale", [&] { vglClGrayscale(img, out); } });
     operations.push_back({ "Threshold", "threshold", [&] { vglClThreshold(img, out, 0.5); } });
     operations.push_back({ "Erosion (3x3 Cross Kernel)", "erosion-cross", [&] { vglClErode(img, out, cross_mask, 3, 3); } });
