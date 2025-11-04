@@ -47,20 +47,20 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 
 | Operations                                 | Once               | Repeatedly                |
 |--------------------------------------------|-------------------:|--------------------------:|
-| Upload                                     |   0.005883s (once) |   0.005458s (10000 times) |
-| Download                                   |    0.00586s (once) |   0.005874s (10000 times) |
-| Copy                                       |     4.3e-5s (once) |   0.000518s (10000 times) |
-| Inversion                                  |   0.353851s (once) |   0.000504s (10000 times) |
-| Grayscale                                  |    0.42339s (once) |   0.000506s (10000 times) |
-| Threshold                                  |   0.056147s (once) |   0.000520s (10000 times) |
-| Erosion (3x3 Cross Kernel)                 |   0.110748s (once) |   0.001728s (10000 times) |
-| Erosion (3x3 Square Kernel)                |     3.4e-5s (once) |   0.002040s (10000 times) |
-| Erosion (1x3+3x1 Square Kernel)            |     3.6e-5s (once) |   0.002638s (10000 times) |
-| Convolution (3x3 Gaussian Blur Kernel)     |   0.075422s (once) |   0.001362s (10000 times) |
-| Convolution (1x3+3x1 Gaussian Blur Kernel) |     3.7e-5s (once) |   0.001795s (10000 times) |
-| Convolution (5x5 Gaussian Blur Kernel)     |     3.4e-5s (once) |   0.002530s (10000 times) |
-| Convolution (1x5+5x1 Gaussian Blur Kernel) |     3.7e-5s (once) |   0.002187s (10000 times) |
-| Gaussian Blur (3x3 Kernel)                 |   0.104005s (once) |   0.001723s (10000 times) |
+| Upload                                     |   0.005696s (once) |   0.005212s (10000 times) |
+| Download                                   |   0.006142s (once) |   0.006028s (10000 times) |
+| Copy                                       |     4.0e-5s (once) |   0.000482s (10000 times) |
+| Inversion                                  |   0.357799s (once) |   0.000463s (10000 times) |
+| Grayscale                                  |   0.061635s (once) |   0.000462s (10000 times) |
+| Threshold                                  |   0.066292s (once) |   0.000463s (10000 times) |
+| Erosion (3x3 Cross Kernel)                 |   0.154804s (once) |   0.000955s (10000 times) |
+| Erosion (3x3 Square Kernel)                |     3.3e-5s (once) |   0.001264s (10000 times) |
+| Erosion (1x3+3x1 Square Kernel)            |     3.5e-5s (once) |   0.001530s (10000 times) |
+| Convolution (3x3 Gaussian Blur Kernel)     |   0.067512s (once) |   0.001024s (10000 times) |
+| Convolution (1x3+3x1 Gaussian Blur Kernel) |     4.5e-5s (once) |   0.001216s (10000 times) |
+| Convolution (5x5 Gaussian Blur Kernel)     |     3.3e-5s (once) |   0.002268s (10000 times) |
+| Convolution (1x5+5x1 Gaussian Blur Kernel) |     3.6e-5s (once) |   0.001533s (10000 times) |
+| Gaussian Blur (3x3 Kernel)                 |   0.112115s (once) |   0.001053s (10000 times) |
 
 #### [OpenCV](benchmarks/opencv/)
 

@@ -8,48 +8,51 @@ using StaticArrays
 
 const BLOCK_SIZE = 16
 
-@inline function inversion_kernel!(input, output, width, height, num_channels, block_size)
-    c = threadIdx().x
-    x = (blockIdx().x - 1) * block_size + threadIdx().y
-    y = (blockIdx().y - 1) * block_size + threadIdx().z
-    if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
+@inline function inversion_kernel!(input, output, width, height, num_channels)
+    x = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    y = (blockIdx().y - 1) * blockDim().y + threadIdx().y
+    if !(1 <= x <= width && 1 <= y <= height) return end
 
-    output[c, x, y] = 1.0f0 - input[c, x, y]
+    for c in 1:num_channels
+        output[c, x, y] = 1.0f0 - input[c, x, y]
+    end
     return
 end
 
-@inline function grayscale_kernel!(input, output, width, height, num_channels, block_size)
-    c = threadIdx().x
-    x = (blockIdx().x - 1) * block_size + threadIdx().y
-    y = (blockIdx().y - 1) * block_size + threadIdx().z
-    if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
+@inline function grayscale_kernel!(input, output, width, height, num_channels)
+    x = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    y = (blockIdx().y - 1) * blockDim().y + threadIdx().y
+    if !(1 <= x <= width && 1 <= y <= height) return end
 
-    gray = 0.299f0 * input[1, x, y]
-         + 0.587f0 * input[2, x, y]
-         + 0.114f0 * input[3, x, y]
-    output[:, x, y] .= gray
+    gray = 0.2126f0 * input[1, x, y] + 0.7152f0 * input[2, x, y] + 0.0722f0 * input[3, x, y]
+    for c in 1:num_channels
+        output[c, x, y] = gray
+    end
     return
 end
 
-@inline function threshold_kernel!(input, output, width, height, num_channels, block_size, threshold_value=0.5f0)
-    c = threadIdx().x
-    x = (blockIdx().x - 1) * block_size + threadIdx().y
-    y = (blockIdx().y - 1) * block_size + threadIdx().z
-    if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
+@inline function threshold_kernel!(input, output, width, height, num_channels, threshold_value=0.5f0)
+    x = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    y = (blockIdx().y - 1) * blockDim().y + threadIdx().y
+    if !(1 <= x <= width && 1 <= y <= height) return end
 
-    output[c, x, y] = input[c, x, y] > threshold_value ? 1.0f0 : 0.0f0
+    for c in 1:num_channels
+        output[c, x, y] = input[c, x, y] > threshold_value ? 1.0f0 : 0.0f0
+    end
     return
 end
 
-@inline function erode_kernel!(input, output, width, height, num_channels, block_size, mask, m_half_height, m_half_width)
-    c = threadIdx().x
-    x = (blockIdx().x - 1) * block_size + threadIdx().y
-    y = (blockIdx().y - 1) * block_size + threadIdx().z
-    if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
+@inline function erode_kernel!(input, output, width, height, num_channels, mask, m_half_height, m_half_width)
+    x = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    y = (blockIdx().y - 1) * blockDim().y + threadIdx().y
+    if !(1 <= x <= width && 1 <= y <= height) return end
 
-    px = input[c, x, y]
+    px = [0.0f0, 0.0f0, 0.0f0, 0.0f0]
     px_sum = 0.0f0
     new_px_sum = 0.0f0
+    for c in 1:num_channels
+        px[c] = input[c, x, y]
+    end
 
     for my in -m_half_height:m_half_height
         for mx in -m_half_width:m_half_width
@@ -57,44 +60,52 @@ end
             iy = y + my
             if !(1 <= ix <= width && 1 <= iy <= height && mask[my+m_half_height+1, mx+m_half_width+1] == 1) continue end
 
-            new_px_sum = sum(input[c, ix, iy])
+            for c in 1:num_channels
+                new_px_sum += input[c, ix, iy]
+            end
             if (new_px_sum > px_sum)
-                px = input[c, ix, iy]
+                for c in 1:num_channels
+                    px[c] = input[c, ix, iy]
+                end
                 px_sum = new_px_sum
             end
         end
     end
 
-    output[c, x, y] = px
+    for c in 1:num_channels
+        output[c, x, y] = px[c]
+    end
     return
 end
 
-@inline function convolution_kernel!(input, output, width, height, num_channels, block_size, kernel, k_half_height, k_half_width)
-    c = threadIdx().x
-    x = (blockIdx().x - 1) * block_size + threadIdx().y
-    y = (blockIdx().y - 1) * block_size + threadIdx().z
-    if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
+@inline function convolution_kernel!(input, output, width, height, num_channels, kernel, k_half_height, k_half_width)
+    x = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    y = (blockIdx().y - 1) * blockDim().y + threadIdx().y
+    if !(1 <= x <= width && 1 <= y <= height) return end
 
-    sum = 0.0f0
+    sum = [0.0f0, 0.0f0, 0.0f0, 0.0f0]
     for ky in -k_half_height:k_half_height
         for kx in -k_half_width:k_half_width
             ix = x + kx
             iy = y + ky
             if !(1 <= ix <= width && 1 <= iy <= height) continue end
 
-            sum += input[c, ix, iy] * kernel[ky+k_half_height+1, kx+k_half_width+1]
+            for c in 1:num_channels
+                sum[c] += input[c, ix, iy] * kernel[ky+k_half_height+1, kx+k_half_width+1]
+            end
         end
     end
 
-    output[c, x, y] = sum
+    for c in 1:num_channels
+        output[c, x, y] = sum[c]
+    end
     return
 end
 
-@inline function gaussian_blur_3x3_kernel!(input, output, width, height, num_channels, block_size)
-    c = threadIdx().x
-    x = (blockIdx().x - 1) * block_size + threadIdx().y
-    y = (blockIdx().y - 1) * block_size + threadIdx().z
-    if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
+@inline function gaussian_blur_3x3_kernel!(input, output, width, height, num_channels)
+    x = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    y = (blockIdx().y - 1) * blockDim().y + threadIdx().y
+    if !(1 <= x <= width && 1 <= y <= height) return end
 
     kernel = @SMatrix [
         1.0f0/16.0f0 2.0f0/16.0f0 1.0f0/16.0f0;
@@ -102,18 +113,22 @@ end
         1.0f0/16.0f0 2.0f0/16.0f0 1.0f0/16.0f0
     ]
 
-    sum = 0.0f0
+    sum = [0.0f0, 0.0f0, 0.0f0, 0.0f0]
     for ky in -1:1
         for kx in -1:1
             ix = x + kx
             iy = y + ky
             if !(1 <= ix <= width && 1 <= iy <= height) continue end
 
-            sum += input[c, ix, iy] * kernel[ky+2, kx+2]
+            for c in 1:num_channels
+                sum[c] += input[c, ix, iy] * kernel[ky+2, kx+2]
+            end
         end
     end
 
-    output[c, x, y] = sum
+    for c in 1:num_channels
+        output[c, x, y] = sum[c]
+    end
     return
 end
 
@@ -162,7 +177,7 @@ function perform_benchmark(image, filename, outdir, rounds)
     num_channels = size(imageview, 1)
     width = size(imageview, 2)
     height = size(imageview, 3)
-    threads = (num_channels, BLOCK_SIZE, BLOCK_SIZE)
+    threads = (BLOCK_SIZE, BLOCK_SIZE)
     blocks = (cld(width, BLOCK_SIZE), cld(height, BLOCK_SIZE))
 
     d_cross_mask = CUDA.zeros(3, 3)
@@ -203,40 +218,40 @@ function perform_benchmark(image, filename, outdir, rounds)
             copyto!(d_output, d_input)
         end),
         ("Inversion", "inversion", () -> begin
-            @cuda blocks = blocks threads = threads inversion_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE)
+            @cuda blocks = blocks threads = threads inversion_kernel!(d_input, d_output, width, height, num_channels)
         end),
         ("Grayscale", "grayscale", () -> begin
-            @cuda blocks = blocks threads = threads grayscale_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE)
+            @cuda blocks = blocks threads = threads grayscale_kernel!(d_input, d_output, width, height, num_channels)
         end),
         ("Threshold", "threshold", () -> begin
-            @cuda blocks = blocks threads = threads threshold_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE)
+            @cuda blocks = blocks threads = threads threshold_kernel!(d_input, d_output, width, height, num_channels)
         end),
         ("Erosion (3x3 Cross Kernel)", "erosion-cross", () -> begin
-            @cuda blocks = blocks threads = threads erode_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE, d_cross_mask, 1, 1)
+            @cuda blocks = blocks threads = threads erode_kernel!(d_input, d_output, width, height, num_channels, d_cross_mask, 1, 1)
         end),
         ("Erosion (3x3 Square Kernel)", "erosion-square", () -> begin
-            @cuda blocks = blocks threads = threads erode_kernel!(d_input, d_output, width, height, num_channels, BLOCK_SIZE, d_square_mask, 1, 1)
+            @cuda blocks = blocks threads = threads erode_kernel!(d_input, d_output, width, height, num_channels, d_square_mask, 1, 1)
         end),
         ("Erosion (1x3+3x1 Square Kernel)", "erosion-square-separated", () -> begin
-            @cuda blocks = blocks threads = threads erode_kernel!(d_input, d_aux, width, height, num_channels, BLOCK_SIZE, d_square_mask_sep_1x3, 0, 1)
-            @cuda blocks = blocks threads = threads erode_kernel!(d_aux, d_output, width, height, num_channels, BLOCK_SIZE, d_square_mask_sep_3x1, 1, 0)
+            @cuda blocks = blocks threads = threads erode_kernel!(d_input, d_aux, width, height, num_channels, d_square_mask_sep_1x3, 0, 1)
+            @cuda blocks = blocks threads = threads erode_kernel!(d_aux, d_output, width, height, num_channels, d_square_mask_sep_3x1, 1, 0)
         end),
         ("Convolution (3x3 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3", () -> begin
-            @cuda blocks = blocks threads = threads convolution_kernel!(d_aux, d_output, width, height, num_channels, BLOCK_SIZE, d_blur_3x3, 1, 1)
+            @cuda blocks = blocks threads = threads convolution_kernel!(d_aux, d_output, width, height, num_channels, d_blur_3x3, 1, 1)
         end),
         ("Convolution (1x3+3x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-3x3-separated", () -> begin
-            @cuda blocks = blocks threads = threads convolution_kernel!(d_input, d_aux, width, height, num_channels, BLOCK_SIZE, d_blur_3x3_1x3, 0, 1)
-            @cuda blocks = blocks threads = threads convolution_kernel!(d_aux, d_output, width, height, num_channels, BLOCK_SIZE, d_blur_3x3_3x1, 1, 0)
+            @cuda blocks = blocks threads = threads convolution_kernel!(d_input, d_aux, width, height, num_channels, d_blur_3x3_1x3, 0, 1)
+            @cuda blocks = blocks threads = threads convolution_kernel!(d_aux, d_output, width, height, num_channels, d_blur_3x3_3x1, 1, 0)
         end),
         ("Convolution (5x5 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5", () -> begin
-            @cuda blocks = blocks threads = threads convolution_kernel!(d_aux, d_output, width, height, num_channels, BLOCK_SIZE, d_blur_5x5, 2, 2)
+            @cuda blocks = blocks threads = threads convolution_kernel!(d_aux, d_output, width, height, num_channels, d_blur_5x5, 2, 2)
         end),
         ("Convolution (1x5+5x1 Gaussian Blur Kernel)", "convolution-gaussian-blur-5x5-separated", () -> begin
-            @cuda blocks = blocks threads = threads convolution_kernel!(d_input, d_aux, width, height, num_channels, BLOCK_SIZE, d_blur_5x5_1x5, 0, 2)
-            @cuda blocks = blocks threads = threads convolution_kernel!(d_aux, d_output, width, height, num_channels, BLOCK_SIZE, d_blur_5x5_5x1, 2, 0)
+            @cuda blocks = blocks threads = threads convolution_kernel!(d_input, d_aux, width, height, num_channels, d_blur_5x5_1x5, 0, 2)
+            @cuda blocks = blocks threads = threads convolution_kernel!(d_aux, d_output, width, height, num_channels, d_blur_5x5_5x1, 2, 0)
         end),
         ("Gaussian Blur (3x3 Kernel)", "gaussian-blur-3x3", () -> begin
-            @cuda blocks = blocks threads = threads gaussian_blur_3x3_kernel!(d_aux, d_output, width, height, num_channels, BLOCK_SIZE)
+            @cuda blocks = blocks threads = threads gaussian_blur_3x3_kernel!(d_aux, d_output, width, height, num_channels)
         end)
     ]
 
