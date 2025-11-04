@@ -51,7 +51,7 @@ You can find this image as **dr_15.JPG** zipped in **images of eyes with diabeti
 | Download                                   |    0.00586s (once) |   0.005874s (10000 times) |
 | Copy                                       |     4.3e-5s (once) |   0.000518s (10000 times) |
 | Inversion                                  |   0.353851s (once) |   0.000504s (10000 times) |
-| Grayscale                                  |   0.099633s (once) |   0.000565s (10000 times) |
+| Grayscale                                  |    0.42339s (once) |   0.000506s (10000 times) |
 | Threshold                                  |   0.056147s (once) |   0.000520s (10000 times) |
 | Erosion (3x3 Cross Kernel)                 |   0.110748s (once) |   0.001728s (10000 times) |
 | Erosion (3x3 Square Kernel)                |     3.4e-5s (once) |   0.002040s (10000 times) |

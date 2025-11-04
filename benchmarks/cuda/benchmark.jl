@@ -24,12 +24,9 @@ end
     y = (blockIdx().y - 1) * block_size + threadIdx().z
     if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
 
-    gray = 0.0f0
-    for c in 1:num_channels
-        gray += input[c, x, y]
-    end
-    gray /= num_channels
-
+    gray = 0.299f0 * input[1, x, y]
+         + 0.587f0 * input[2, x, y]
+         + 0.114f0 * input[3, x, y]
     output[:, x, y] .= gray
     return
 end
@@ -49,7 +46,7 @@ end
     x = (blockIdx().x - 1) * block_size + threadIdx().y
     y = (blockIdx().y - 1) * block_size + threadIdx().z
     if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
-    
+
     px = input[c, x, y]
     px_sum = 0.0f0
     new_px_sum = 0.0f0
@@ -62,34 +59,6 @@ end
 
             new_px_sum = sum(input[c, ix, iy])
             if (new_px_sum > px_sum)
-                px = input[c, ix, iy]
-                px_sum = new_px_sum
-            end
-        end
-    end
-
-    output[c, x, y] = px
-    return
-end
-
-@inline function dilate_kernel!(input, output, width, height, num_channels, block_size, mask, m_half_height, m_half_width)
-    c = threadIdx().x
-    x = (blockIdx().x - 1) * block_size + threadIdx().y
-    y = (blockIdx().y - 1) * block_size + threadIdx().z
-    if !(1 <= x <= width && 1 <= y <= height && c <= num_channels) return end
-    
-    px = input[c, x, y]
-    px_sum = 1.0f0
-    new_px_sum = 1.0f0
-
-    for my in -m_half_height:m_half_height
-        for mx in -m_half_width:m_half_width
-            ix = x + mx
-            iy = y + my
-            if !(1 <= ix <= width && 1 <= iy <= height && mask[my+m_half_height+1, mx+m_half_width+1] == 1) continue end
-
-            new_px_sum = sum(input[c, ix, iy])
-            if (new_px_sum < px_sum)
                 px = input[c, ix, iy]
                 px_sum = new_px_sum
             end
