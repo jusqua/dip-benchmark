@@ -115,15 +115,11 @@ for (size_t c = 0; c < channels; ++c) {
 A implementação em CUDA utilizou o pacote CUDA.jl para a linguagem Julia, que fornece uma interface de alto nível para programação CUDA. Para o desenvolvimento do \textit{kernel} para ser executado utilizamos a estrutura descrita em \ref{lst:cudajl-kernel-struct}.
 
 \begin{lstlisting}[caption={Estrutura do \textit{kernel} para fila CUDA.jl.}, label={lst:cudajl-kernel-struct}]
-@inline function kernel!(input, output, width, height,
-                         num_channels, block_size)
+@inline function kernel!(input, output, width, height, num_channels)
     # prelude
-    c = threadIdx().x
-    x = (blockIdx().x - 1) * block_size + threadIdx().y
-    y = (blockIdx().y - 1) * block_size + threadIdx().z
-    if !(1 <= x <= width
-        && 1 <= y <= height
-        && c <= num_channels) return end
+    x = (blockIdx().x - 1) * block_size + threadIdx().x
+    y = (blockIdx().y - 1) * block_size + threadIdx().y
+    if !(1 <= x <= width && 1 <= y <= height &&) return end
 
     # operator logic
     # ...
@@ -136,62 +132,72 @@ end
 A seguir será apresentado a implementação da base de cada \textit{kernel} dos operadores em Julia.
 
 \begin{lstlisting}[caption={Implementação do operador para \Cref{eq:inversion}.}, label={lst:cudajl-inversion-kernel}]
-output[c, x, y] = 1.0f0 - input[c, x, y]
+for c in 1:num_channels
+  output[c,x,y] = 1.0f0 - input[c,x,y]
+end
 \end{lstlisting}
 
 \begin{lstlisting}[caption={Implementação do operador para \Cref{eq:grayscale}.}, label={lst:cudajl-grayscale-kernel}]
-gray = 0.299f0 * input[1, x, y]
-     + 0.587f0 * input[2, x, y]
-     + 0.114f0 * input[3, x, y]
-output[:, x, y] .= gray
+gray = 0.2126f0 * input[1,x,y] + 0.7152f0 * input[2,x,y] + 0.0722f0 * input[3,x,y]
+for c in 1:num_channels
+  output[c,x,y] = gray
+end
 \end{lstlisting}
 
 \begin{lstlisting}[caption={Implementação do operador para \Cref{eq:thresholding}.}, label={lst:cudajl-threshold-kernel}]
-output[c, x, y] = input[c, x, y] > threshold_value
-                ? 1.0f0
-                : 0.0f0
+for c in 1:num_channels
+  output[c,x,y] = input[c,x,y] > threshold_value ? 1.0f0 : 0.0f0
+end
 \end{lstlisting}
 
 \begin{lstlisting}[caption={Implementação do operador para \Cref{eq:erosion}.}, label={lst:cudajl-erosion-kernel}]
-px = input[c, x, y]
+px = [0.0f0, 0.0f0, 0.0f0, 0.0f0]
 px_sum = 0.0f0
 new_px_sum = 0.0f0
+for c in 1:num_channels
+  px[c] = input[c,x,y]
+end
 
 for my in -m_half_height:m_half_height
   for mx in -m_half_width:m_half_width
     ix = x + mx
     iy = y + my
-    if !(1 <= ix <= width
-        && 1 <= iy <= height
-        && mask[my+m_half_height+1, mx+m_half_width+1] == 1)
-      continue
-    end
+    if !(1 <= ix <= width && 1 <= iy <= height && mask[my+m_half_height+1, mx+m_half_width+1] == 1) continue end
 
-    new_px_sum = sum(input[c, ix, iy])
+    for c in 1:num_channels
+      new_px_sum += input[c,ix,iy]
+    end
     if (new_px_sum > px_sum)
-      px = input[c, ix, iy]
+      for c in 1:num_channels
+        px[c] = input[c,ix,iy]
+      end
       px_sum = new_px_sum
     end
   end
 end
-output[c, x, y] = px
+
+for c in 1:num_channels
+  output[c,x,y] = px[c]
+end
 \end{lstlisting}
 
 \begin{lstlisting}[caption={Implementação do operador para \Cref{eq:convolution}.}, label={lst:cudajl-convolution-kernel}]
-sum = 0.0f0
+sum = [0.0f0, 0.0f0, 0.0f0, 0.0f0]
 for ky in -k_half_height:k_half_height
   for kx in -k_half_width:k_half_width
     ix = x + kx
     iy = y + ky
-    if !(1 <= ix <= width && 1 <= iy <= height)
-      continue
-    end
+    if !(1 <= ix <= width && 1 <= iy <= height) continue end
 
-    sum += input[c, ix, iy]
-        * kernel[ky+k_half_height+1, kx+k_half_width+1]
+    for c in 1:num_channels
+      sum[c] += input[c,ix,iy] * kernel[ky+k_half_height+1, kx+k_half_width+1]
+    end
   end
 end
-output[c, x, y] = sum
+
+for c in 1:num_channels
+  output[c,x,y] = sum[c]
+end
 \end{lstlisting}
 
 \subsection{Implementação dos benchmarks}
