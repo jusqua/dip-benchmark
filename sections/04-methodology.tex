@@ -13,7 +13,7 @@ A metodologia adotada será baseada nos experimentos de \cite{Dantas2015opencl} 
 	\item MATLAB Parallel Computing Toolbox.
 \end{itemize}
 
-Desenvolveremos os operadores de processamento de imagens conforme descritos nas \Crefrange{eq:grayscale}{eq:dilation} nas tecnologias que buscamos analisar o desempenho.
+Desenvolveremos os operadores de processamento de imagens conforme descritos nas \Crefrange{eq:grayscale}{eq:dilation} para as tecnologias que buscamos analisar os desempenhos.
 
 A foi feito um \textit{fork} da biblioteca VisionGL\footnote{\url{https://github.com/ddantas/visiongl}} para estudo da estrutura do projeto e desenvolvimento dos operadores lógicos em outras tecnologias. O \textit{fork} este presente no repositório do GitHub\footnote{\url{https://github.com/jusqua/visiongl}}.
 
@@ -50,16 +50,6 @@ As especificações do ambiente de trabalho utilizado no momento da realização
 
 \subsection{Estrutura do Benchmark}
 
-Para garantir comparações justas entre as tecnologias, foi desenvolvida uma estrutura de benchmark que:
-\begin{enumerate}
-	\item Carrega a mesma imagem de entrada para todas as tecnologias.
-	\item Realiza o aquecimento da GPU executando cada operador uma vez antes das medições.
-	\item Executa cada operador múltiplas vezes (10000 iterações) para obter medições estatisticamente significativas.
-	\item Mede o tempo de execução incluindo transferência de dados entre CPU e GPU.
-	\item Mede o tempo de execução apenas do processamento no dispositivo.
-	\item Registra uso de memória e outras métricas relevantes.
-\end{enumerate}
-
 A imagem de teste utilizada nos experimentos é a mostrada na \Cref{fig:fundus} com dimensões de $3504x2336$ píxeis e 3 canais de cor. A imagem foi escolhida por conter por ser grande o suficiente para ter um atraso significativo no processamento.
 
 \begin{figure}[htbp]
@@ -69,6 +59,47 @@ A imagem de teste utilizada nos experimentos é a mostrada na \Cref{fig:fundus} 
 	\label{fig:fundus}
 \end{figure}
 
-Todos os experimentos foram executados com a mesma imagem de teste para avaliar o comportamento de escala de cada tecnologia. Os resultados foram salvos em formato estruturado para análise posterior.
+Para o operador de erosão~\ref{eq:erosion} utilizamos elementos estruturantes distintos:
+\begin{enumerate}
+    \item cruz 3x3:
+        $\begin{bmatrix}
+            0 & 1 & 0 \\
+            1 & 1 & 1 \\
+            0 & 1 & 0
+        \end{bmatrix}$;
+    \item quadrado 3x3:
+        $\begin{bmatrix}
+            1 & 1 & 1 \\
+            1 & 1 & 1 \\
+            1 & 1 & 1
+        \end{bmatrix}$;
+    \item quadrado 3x3 separado:
+        $\begin{bmatrix}
+            1 & 1 & 1
+        \end{bmatrix}
+        \cross
+        \begin{bmatrix}
+            1 \\
+            1 \\
+            1
+        \end{bmatrix}$.
+\end{enumerate}
 
-Todos os experimentos e simulações deste trabalho que foram realizados estão presentes no repositório do GitHub\footnote{\url{https://github.com/jusqua/dip-benchmark}}.
+Para o operador de convolução~\ref{eq:convolution} utilizamos \textit{kernels} de desfoque gaussiano com diferentes proporções e desenvolvimentos:
+\begin{enumerate}
+    \item 3x3;
+    \item 3x3 separado;
+    \item 3x3 injetado estaticamente no operador;
+    \item 5x5;
+    \item 5x5 separado.
+\end{enumerate}
+
+Para garantir comparações justas entre as tecnologias, foi desenvolvida a seguinte estrutura de benchmark que:
+\begin{enumerate}
+	\item carrega a imagem de teste, elementos estruturantes e \textit{kernels} na memória do dispositivo;
+	\item mede o tempo médio de execução da transferência de dados entre CPU e GPU, entre GPU e GPU, e o tempo dos operadores em 10000 iterações;
+	\item realiza o aquecimento da GPU executando cada operador uma vez antes das medições;
+	\item salva as imagens para comparação dos resultados.
+\end{enumerate}
+
+Todos os experimentos foram executados com a mesma imagem de teste para avaliar o comportamento de escala de cada tecnologia. Os resultados foram salvos em formato estruturado para análise posterior. Os experimentos e simulações deste trabalho que foram realizados estão presentes no repositório do GitHub\footnote{\url{https://github.com/jusqua/dip-benchmark}}.
