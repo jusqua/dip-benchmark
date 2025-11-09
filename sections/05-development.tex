@@ -119,13 +119,13 @@ A implementação em CUDA utilizou o pacote CUDA.jl para a linguagem Julia, que 
     # prelude
     x = (blockIdx().x - 1) * block_size + threadIdx().x
     y = (blockIdx().y - 1) * block_size + threadIdx().y
-    if !(1 <= x <= width && 1 <= y <= height &&) return end
+    if !(1 <= x <= width && 1 <= y <= height) return end
 
     # operator logic
     # ...
 
     # epilogue
-    return
+    return nothing
 end
 \end{lstlisting}
 

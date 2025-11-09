@@ -1,1 +1,11 @@
 \section{Conclusões}
+
+A seguir, serão exibidas observações referentes aos resultados obtidos.
+
+Na \Cref{fig:memory-operations} é possível identificar uma disparidade no processo de cópia causado, provavelmente, por compartilhamento implícito de memória ou \textit{Copy-on-Write} (COW).
+
+Na \Cref{fig:convolution-3-operations}, o operador de desfoque gaussiano da biblioteca OpenCV obtém um resultado inferior ao operador de convolução com \textit{kernel}.
+
+Apenas a implementação em SYCL feita nesta pesquisa foi a única real beneficiada ao utilizar o \textit{kernel} e elemento estruturante separadamente, diferentemente dos resultados apontados em \cite{Dantas2016opencl}.
+
+Observa-se que a implementação obteve um bom desempenho em todos os processos

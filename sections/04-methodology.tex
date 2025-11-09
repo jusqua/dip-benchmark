@@ -4,7 +4,7 @@ Nesta seção, será apresentada a metodologia adotada para o desenvolvimento do
 
 \subsection{Estudo e Experimentos}
 
-A metodologia adotada será baseada nos experimentos de \cite{Dantas2015opencl} que utiliza a biblioteca VisionGL com operadores de processamento de imagens implementados em OpenCL como base para análise de desempenho de diferentes tecnologias de computação paralela. Repetiremos o experimento com estas tecnologias:
+A metodologia adotada será baseada nos experimentos \cite{Dantas2015opencl,Dantas2016opencl} que utilizam a biblioteca VisionGL com operadores de processamento de imagens implementados em OpenCL como base para análise de desempenho de diferentes tecnologias de computação paralela. Repetiremos o experimento com estas tecnologias:
 \begin{itemize}
 	\item SYCL através do compilador AdaptiveCPP.
 	\item CUDA com Julia através da biblioteca CUDA.jl.
@@ -52,7 +52,7 @@ As especificações do ambiente de trabalho utilizado no momento da realização
 
 A imagem de teste utilizada nos experimentos é a mostrada na \Cref{fig:fundus} com dimensões de $3504x2336$ píxeis e 3 canais de cor. A imagem foi escolhida por conter por ser grande o suficiente para ter um atraso significativo no processamento.
 
-\begin{figure}[htbp]
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[width=0.8\linewidth]{images/fundus.jpg}
 	\caption{Imagem de olho com retinopatia diabética. Obtida em: \url{https://www5.cs.fau.de/research/data/fundus-images/}}
