@@ -19,20 +19,30 @@ Nesta seção, serão exibidos os resultados referentes aos operadores em cada t
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=1\linewidth]{images/erosion-operations.png}
-	\caption{Comparação do tempo médio de execução do operador de erosão com diferentes \textit{kernels} 3x3.}
+	\caption{Comparação do tempo médio de execução do operador de erosão com diferentes \textit{kernels} 3 $\times$ 3.}
 	\label{fig:erosion-operations}
 \end{figure}
 
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=1\linewidth]{images/convolution-3x3-operations.png}
-	\caption{Comparação do tempo médio de execução do operador de convolução com diferentes \textit{kernels} 3x3.}
+	\caption{Comparação do tempo médio de execução do operador de convolução com diferentes \textit{kernels} 3 $\times$ 3.}
 	\label{fig:convolution-3-operations}
 \end{figure}
 
  \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=1\linewidth]{images/convolution-5x5-operations.png}
-	\caption{Comparação do tempo médio de execução do operador de convolução com diferentes \textit{kernels} 5x5.}
+	\caption{Comparação do tempo médio de execução do operador de convolução com diferentes \textit{kernels} 5 $\times$ 5.}
 	\label{fig:convolution-5-operations}
 \end{figure}
+
+\subsection{Observações}
+
+A seguir, serão exibidas observações referentes aos resultados obtidos.
+
+Na \Cref{fig:memory-operations} é possível identificar uma disparidade no processo de cópia causado, provavelmente, por compartilhamento implícito de memória ou \textit{copy-on-write} (COW).
+
+Na \Cref{fig:convolution-3-operations}, o operador de desfoque gaussiano da biblioteca OpenCV obtém um resultado inferior ao operador de convolução com \textit{kernel}.
+
+Apenas a implementação em SYCL feita nesta pesquisa foi a única real beneficiada ao utilizar o \textit{kernel} e elemento estruturante separadamente, diferentemente dos resultados apontados em \cite{Dantas2016opencl}.

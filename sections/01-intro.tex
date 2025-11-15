@@ -1,8 +1,8 @@
 \section{Introdução}
 
-O aumento da demanda por desempenho computacional, especialmente em áreas que requerem processamento de grande volume de dados em diversas estruturas, levou ao crescente uso de arquiteturas heterogêneas como \textit{Central Processing Unit} (CPUs), \textit{Graphics Processing Unit} (GPUs) e aceleradores diversos. A diversidade de arquiteturas contém desafios para portabilidade de ferramentas computacionais~\cite{pacheco11}.
+O aumento da demanda por desempenho computacional, especialmente em áreas que requerem processamento de grande volume de dados em diversas estruturas, levou ao crescente uso de arquiteturas heterogêneas como \textit{central processing unit} (CPUs), \textit{graphics processing unit} (GPUs) e aceleradores diversos. A diversidade de arquiteturas contém desafios para portabilidade de ferramentas computacionais~\cite{pacheco11}.
 
-O \textit{framework} proprietário CUDA~\cite{nickolls2008} promove uma \textit{Application Programming Interface} (API) para desenvolvimento de programas com processamento paralelo em dispositivos de GPU específicos da fabricante NVIDIA. Utilizaremos a linguagem de programação Julia como o pacote CUDA.jl~\cite{besard2018juliagpu} para produzir algoritmos de processamento de imagens.
+O \textit{framework} proprietário CUDA~\cite{nickolls2008} promove uma \textit{application programming interface} (API) para desenvolvimento de programas com processamento paralelo em dispositivos de GPU específicos da fabricante NVIDIA. Utilizaremos a linguagem de programação Julia como o pacote CUDA.jl~\cite{besard2018juliagpu} para produzir algoritmos de processamento de imagens.
 
 O \textit{framework} SYCL~\cite{sycl2020} apresenta uma camada de abstração de que permite o desenvolvimento de programas para processamento heterogêneo na linguagem C++ com APIs para trabalhar CPUs, GPUs e FPGAs. Em nosso estudo utilizamos AdaptiveCPP~\cite{acpp}, uma implementação da especificação SYCL, para analisar a viabilidade para processamento de imagens médicas.
 

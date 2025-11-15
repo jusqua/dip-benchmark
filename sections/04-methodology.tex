@@ -13,13 +13,13 @@ A metodologia adotada será baseada nos experimentos \cite{Dantas2015opencl,Dant
 	\item MATLAB Parallel Computing Toolbox.
 \end{itemize}
 
-Desenvolveremos os operadores de processamento de imagens conforme descritos nas \Crefrange{eq:grayscale}{eq:dilation} para as tecnologias que buscamos analisar os desempenhos.
+Desenvolveremos os operadores de processamento de imagens conforme descritos nas \Crefrange{eq:grayscale}{eq:dilation} para as tecnologias cujo desempenho iremos analisar.
 
-A foi feito um \textit{fork} da biblioteca VisionGL\footnote{\url{https://github.com/ddantas/visiongl}} para estudo da estrutura do projeto e desenvolvimento dos operadores lógicos em outras tecnologias. O \textit{fork} este presente no repositório do GitHub\footnote{\url{https://github.com/jusqua/visiongl}}.
+A foi feito um \textit{fork} da biblioteca VisionGL\footnote{\url{https://github.com/ddantas/visiongl}} para estudo da estrutura do projeto e desenvolvimento dos operadores lógicos em outras tecnologias. O \textit{fork} está num repositório do GitHub\footnote{\url{https://github.com/jusqua/visiongl}}.
 
 \subsection{Recursos Utilizados}
 
-As especificações do ambiente de trabalho utilizado no momento da realização dos experimentos:
+As especificações do ambiente de trabalho utilizado no momento da realização dos experimentos são as seguintes:
 \begin{itemize}
 	\item \textbf{Hardware:}
 	      \begin{itemize}
@@ -50,7 +50,7 @@ As especificações do ambiente de trabalho utilizado no momento da realização
 
 \subsection{Estrutura do Benchmark}
 
-A imagem de teste utilizada nos experimentos é a mostrada na \Cref{fig:fundus} com dimensões de $3504x2336$ píxeis e 3 canais de cor. A imagem foi escolhida por conter por ser grande o suficiente para ter um atraso significativo no processamento.
+A imagem de teste utilizada nos experimentos é a mostrada na \Cref{fig:fundus} com dimensões de 3504 $\times$ 2336 pixels e 3 canais de cor. A imagem foi escolhida por conter por ser grande o suficiente para ter um atraso significativo no processamento.
 
 \begin{figure}[!htb]
 	\centering
@@ -61,19 +61,19 @@ A imagem de teste utilizada nos experimentos é a mostrada na \Cref{fig:fundus} 
 
 Para o operador de erosão~\ref{eq:erosion} utilizamos elementos estruturantes distintos:
 \begin{enumerate}
-    \item cruz 3x3:
+    \item cruz 3 $\times$ 3:
         $\begin{bmatrix}
             0 & 1 & 0 \\
             1 & 1 & 1 \\
             0 & 1 & 0
         \end{bmatrix}$;
-    \item quadrado 3x3:
+    \item quadrado 3 $\times$ 3:
         $\begin{bmatrix}
             1 & 1 & 1 \\
             1 & 1 & 1 \\
             1 & 1 & 1
         \end{bmatrix}$;
-    \item quadrado 3x3 separado:
+    \item quadrado 3 $\times$ 3 separado:
         $\begin{bmatrix}
             1 & 1 & 1
         \end{bmatrix}
@@ -87,19 +87,19 @@ Para o operador de erosão~\ref{eq:erosion} utilizamos elementos estruturantes d
 
 Para o operador de convolução~\ref{eq:convolution} utilizamos \textit{kernels} de desfoque gaussiano com diferentes proporções e desenvolvimentos:
 \begin{enumerate}
-    \item 3x3;
-    \item 3x3 separado;
-    \item 3x3 injetado estaticamente no operador;
-    \item 5x5;
-    \item 5x5 separado.
+    \item 3 $\times$ 3;
+    \item 3 $\times$ 3 separado;
+    \item 3 $\times$ 3 injetado estaticamente no operador;
+    \item 5 $\times$ 5;
+    \item 5 $\times$ 5 separado.
 \end{enumerate}
 
 Para garantir comparações justas entre as tecnologias, foi desenvolvida a seguinte estrutura de benchmark que:
 \begin{enumerate}
 	\item carrega a imagem de teste, elementos estruturantes e \textit{kernels} na memória do dispositivo;
+	\item realiza a execução de cada operador uma vez antes das medições\footnote{VisionGL e AdaptiveCPP necessitam compilar os operadores pelo menos uma vez para atingir a performance máxima};
 	\item mede o tempo médio de execução da transferência de dados entre CPU e GPU, entre GPU e GPU, e o tempo dos operadores em 10000 iterações;
-	\item realiza o aquecimento da GPU executando cada operador uma vez antes das medições;
 	\item salva as imagens para comparação dos resultados.
 \end{enumerate}
 
-Todos os experimentos foram executados com a mesma imagem de teste para avaliar o comportamento de escala de cada tecnologia. Os resultados foram salvos em formato estruturado para análise posterior. Os experimentos e simulações deste trabalho que foram realizados estão presentes no repositório do GitHub\footnote{\url{https://github.com/jusqua/dip-benchmark}}.
+Todos os experimentos foram executados com a mesma imagem de teste para avaliar o comportamento de escala de cada tecnologia. Os resultados foram salvos em um arquivo CSV para análise posterior. Os experimentos e simulações deste trabalho que foram realizados estão presentes no repositório do GitHub\footnote{\url{https://github.com/jusqua/dip-benchmark}}.

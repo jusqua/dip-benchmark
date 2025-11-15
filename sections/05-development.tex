@@ -4,7 +4,7 @@ Nesta seção, serão apresentados os detalhes de implementação dos operadores
 
 \subsection{Implementação dos operadores para SYCL}
 
-Para cada operador, foi criado um \textit{functor} para servir como \textit{kernel} de execução. O gerenciamento de memória foi realizado por meio de USM, que não abstraem a transferência de dados entre CPU e GPU. Para o desenvolvimento do \textit{kernel} para ser executado utilizamos a estrutura descrita em \ref{lst:sycl-kernel-struct}.
+Para cada operador, foi criado um \textit{functor} para servir como \textit{kernel} de execução. O gerenciamento de memória foi realizado por meio de USM, que não abstraem a transferência de dados entre CPU e GPU. Para o desenvolvimento do \textit{kernel} para ser executado utilizamos a estrutura descrita na Listagem~\ref{lst:sycl-kernel-struct}.
 
 \begin{lstlisting}[caption={Estrutura de um \textit{functor} para ser utilizado como \textit{kernel} para a fila SYCL.}, label={lst:sycl-kernel-struct}]
 class Kernel {
@@ -112,7 +112,7 @@ for (size_t c = 0; c < channels; ++c) {
 
 \subsection{Implementação dos operadores para CUDA}
 
-A implementação em CUDA utilizou o pacote CUDA.jl para a linguagem Julia, que fornece uma interface de alto nível para programação CUDA. Para o desenvolvimento do \textit{kernel} para ser executado utilizamos a estrutura descrita em \ref{lst:cudajl-kernel-struct}.
+A implementação em CUDA utilizou o pacote CUDA.jl para a linguagem Julia, que fornece uma interface de alto nível para programação CUDA. Para o desenvolvimento do \textit{kernel} para ser executado utilizamos a estrutura descrita na Listagem~\ref{lst:cudajl-kernel-struct}.
 
 \begin{lstlisting}[caption={Estrutura do \textit{kernel} para fila CUDA.jl.}, label={lst:cudajl-kernel-struct}]
 @inline function kernel!(input, output, width, height, num_channels)

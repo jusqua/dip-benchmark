@@ -8,15 +8,15 @@ Nesta subseção, serão apresentados conceitos básicos sobre imagens digitais,
 
 \subsubsection{Imagens digitais}
 
-Uma imagem digital é uma representação bidimensional de uma cena ou objeto, composta por uma matriz de píxeis (do inglês, \textit{picture elements}). Cada píxel contém informações sobre cor e intensidade, que podem ser representadas em diferentes formatos, como RGB (vermelho, verde, azul), RGBA (RGB com fator de transparência alfa) ou escala de cinza~\cite{gonzalez17}.
+Uma imagem digital é uma representação bidimensional de uma cena ou objeto, composta por uma matriz de pixels (do inglês, \textit{picture elements}). Cada pixel contém informações sobre cor e intensidade, que podem ser representadas em diferentes formatos, como RGB (vermelho, verde, azul), RGBA (RGB com fator de transparência alfa) ou escala de cinza~\cite{gonzalez17}.
 
 Imagens armazenam informações visuais que podem ser processadas e analisadas por funções matemáticas por computadores para, por exemplo, melhorar a nitidez, extrair características ou preparar para análise posterior.
 
-Imagens com 2D podem ser representadas como uma matriz \(I\) de tamanho \(M \times N\), onde \(M\) é o número de linhas (altura) e \(N\) é o número de colunas (largura). Cada elemento \(I(i,j)\) da matriz representa o valor do píxel na posição \((i,j)\). Em imagens em escala de cinza, esse valor é um número entre 0 (preto) e 1 (branco). Em imagens coloridas, cada píxel pode ser representado por três ou quatro valores correspondentes aos canais RGB e RGBA, respectivamente~\cite{gonzalez17}.
+Imagens com 2D podem ser representadas como uma matriz \(I\) de tamanho \(M \times N\), onde \(M\) é o número de linhas (altura) e \(N\) é o número de colunas (largura). Cada elemento \(I(i,j)\) da matriz representa o valor do pixel na posição \((i,j)\). Em imagens em escala de cinza, esse valor é um número entre 0 (preto) e 1 (branco). Em imagens coloridas, cada pixel pode ser representado por três ou quatro valores correspondentes aos canais RGB e RGBA, respectivamente~\cite{gonzalez17}.
 
 \subsubsection{Operações pontuais e matriciais}
 
-Uma operação é dita pontual quando processa os dados de cada píxel da imagem resultante sem depender de dados vizinhos, já uma operação é dita matricial quando processa os dados de cada píxel da imagem utilizando todo o escopo da imagem aplicando transformações lineares~\cite{gonzalez17}.
+Uma operação é dita pontual quando processa os dados de cada pixel da imagem resultante sem depender de dados vizinhos, já uma operação é dita matricial quando processa os dados de cada pixel da imagem utilizando todo o escopo da imagem aplicando transformações lineares~\cite{gonzalez17}.
 \noindent O produto pontual das imagens (denotado pelo símbolo $\odot$ ou $\otimes$) é formado multiplicado os elementos homólogos (de mesmo índice):
 \[
 	\begin{bmatrix}
@@ -62,13 +62,13 @@ Um operador \(L\) que atua sobre imagens é dito linear se satisfaz o princípio
 \end{enumerate}
 Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,I_2) = a\,L(I_1) + b\,L(I_2)\). Quaisquer operadores que não satisfazem essas propriedades são chamados não-lineares~\cite{gonzalez17}.
 
-\noindent Um exemplo de operador linear é a escala de cinza, que pode ser representada como uma combinação linear dos canais RGB:
+\noindent Um exemplo de operador linear é a conversão de imagem RGB em escala de cinza, que pode ser representada como uma combinação linear dos canais RGB:
 \begin{equation}
 	\label{eq:grayscale}
 	I_{out}(i,j) = G(I(i,j)) = 0.299 R + 0.587 G + 0.114 B
 \end{equation}
 
-\noindent Um exemplo de operador não-linear é a limiarização, que define um valor de corte \(T\) para segmentar a imagem em duas classes utilizando os valores dos píxeis:
+\noindent Um exemplo de operador não-linear é a limiarização, que define um valor de corte \(T\) para segmentar a imagem em duas classes utilizando os valores dos pixels:
 \begin{equation}
 	\label{eq:thresholding}
 	I_{out}(i,j) = T(I(i,j)) =
@@ -80,13 +80,13 @@ Em consequência, para combinações lineares genéricas tem-se \(L(a\,I_1 + b\,
 
 \subsubsection{Operações ponto-a-ponto e de janela}
 
-Um operador é dito de ponto-a-ponto quando altera cada píxel da própria imagem por meio de um valor de referência para produzir a imagem resultante~\cite{gonzalez17}. Sendo assim, cada píxel da imagem resultante depende exclusivamente do valor do píxel correspondente na imagem original. Considerando uma função de transformação \(T(z)\) tem como exemplo a operação complemento ou inversão de cores, que pode ser definida como:
+Um operador é dito de ponto-a-ponto quando altera cada pixel da própria imagem por meio de um valor de referência para produzir a imagem resultante~\cite{gonzalez17}. Sendo assim, cada pixel da imagem resultante depende exclusivamente do valor do pixel correspondente na imagem original. Considerando uma função de transformação \(T(z)\) tem como exemplo a operação complemento ou inversão de cores, que pode ser definida como:
 \begin{equation}
 	\label{eq:inversion}
 	I_{out}(i,j) = T(I_{in}(i,j)) = 1 - I_{in}(i,j)
 \end{equation}
 
-Um operador é dito de janela quando processa uma imagem considerando a vizinhança dos píxeis por meio de uma máscara ou \textit{kernel} representado por uma matriz aplicado sobre a imagem original para produzir a imagem resultante. Com isso, cada píxel da imagem resultante depende dos valores dos píxeis vizinhos na imagem original. Considerando uma máscara \(K\) de tamanho \(m \times n\), a operação de convolução é um exemplo de operador de janela, definida como:
+Um operador é dito de janela quando processa uma imagem considerando a vizinhança dos pixels. Um \textit{kernel} representado por uma matriz de pesos aplicada sobre a imagem original para produzir a imagem resultante. Com isso, cada pixel da imagem resultante depende dos valores dos pixels vizinhos na imagem original. Considerando uma máscara \(K\) de tamanho \(m \times n\), a operação de convolução é um exemplo de operador de janela, definida como:
 \begin{equation}
 	\label{eq:convolution}
 	I_{out}(i,j) = \sum_{u=-\lfloor m/2 \rfloor}^{\lfloor m/2 \rfloor} \sum_{v=-\lfloor n/2 \rfloor}^{\lfloor n/2 \rfloor} K(u,v) \cdot I_{in}(i+u,j+v)
@@ -94,7 +94,7 @@ Um operador é dito de janela quando processa uma imagem considerando a vizinhan
 
 \subsubsection{Operações morfológicas}
 
-Operações morfológicas constituem uma família distinta de transformações que exploram a forma e a estrutura de objetos na imagem por meio de um elemento estruturante \(B\). Em imagens binárias, uma imagem pode ser vista como um conjunto \(A \subset \mathbb{Z}^2\) dos pontos (píxeis) com valor 1. As duas operações fundamentais são erosão e dilatação, definidas em termos de teoria dos conjuntos como:
+Operações morfológicas constituem uma família distinta de transformações que exploram a forma e a estrutura de objetos na imagem por meio de um elemento estruturante \(B\). Em imagens binárias, uma imagem pode ser vista como um conjunto \(A \subset \mathbb{Z}^2\) dos pontos (pixels) com valor 1. As duas operações fundamentais são erosão e dilatação, definidas em termos de teoria dos conjuntos como:
 \begin{equation}
 	\label{eq:erosion}
 	A \ominus B = \{ z \in \mathbb{Z}^2 \mid B_z \subseteq A \},
@@ -104,9 +104,10 @@ Operações morfológicas constituem uma família distinta de transformações q
 	A \oplus B = \{ z \in \mathbb{Z}^2 \mid \hat{B}_z \cap A \neq \emptyset \},
 \end{equation}
 
+\noindent
 onde \(B_z\) denota a translação do elemento estruturante \(B\) pela posição \(z\) e \(\hat{B}\) é a reflexão de \(B\). Intuitivamente, a erosão encolhe objetos e remove pequenos artefatos, enquanto a dilatação expande objetos e preenche lacunas.
 
-A escolha do elemento estruturante — sua forma (retangular, disco, cruz, etc.) e seu tamanho — determina quais características morfológicas são preservadas ou removidas~\cite{gonzalez17}.
+A escolha do elemento estruturante---sua forma (retangular, disco, cruz, etc.) e seu tamanho---determina quais características morfológicas são preservadas ou removidas~\cite{gonzalez17}.
 
 \subsection{Arquiteturas de computadores}
 
@@ -124,18 +125,18 @@ O sistema operacional gerencia a execução de processos e \textit{threads} medi
 
 Um processo é uma instância de um programa em execução com seu próprio espaço de endereçamento. \textit{Threads} são unidades de execução num processo que compartilham memória e recursos, o que facilita a comunicação, mas exige mecanismos de sincronização como travas e barreiras para evitar condições de corrida~\cite{ArpaciDusseau23}.
 
-Enquanto uma CPU contêm núcleos de processamento mais complexos que operam instruções sequencialmente, uma GPU tem uma arquitetura altamente paralelizável \textit{Single Instruction, Multiple Data} (SIMD) com até dezenas de milhares de núcleos de processamento mais simples~\cite{nickolls2008}. Um exemplo é demonstrado na \Cref{fig:gpu-cpu-comparation}, onde a área de silício dedicada ao processamento em uma GPU é significativamente maior do que em uma CPU, refletindo sua capacidade de paralelismo massivo~\cite{stallings15computer}.
+Enquanto uma CPU contêm núcleos de processamento mais complexos que operam instruções sequencialmente, uma GPU tem uma arquitetura altamente paralelizável \textit{single instruction, multiple data} (SIMD) com até dezenas de milhares de núcleos de processamento mais simples~\cite{nickolls2008}. Um exemplo é demonstrado na \Cref{fig:gpu-cpu-comparation}, onde a área de silício dedicada ao processamento em uma GPU é significativamente maior do que em uma CPU, refletindo sua capacidade de paralelismo massivo~\cite{stallings15computer}.
 
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=0.8\linewidth]{images/gpu-cpu-comparation.png}
-	\caption{Comparação da Área de Silício/Dedicação de Transistores entre CPU e GPU. Imagem adaptada de~\cite{stallings15computer}.}
+	\caption{Comparação da área de silício/dedicação de transistores entre CPU e GPU. Imagem adaptada de~\cite{stallings15computer}.}
 	\label{fig:gpu-cpu-comparation}
 \end{figure}
 
 \subsubsection{Programação paralela e concorrente}
 
-De forma simples, o principal objetivo da programação paralela é computar algo mais rapidamente. Um processo é dito paralelo quando uma tarefa é dividida em pequenas partes executadas simultaneamente com o intuito de acelerar a execução desta tarefa~\cite{ArpaciDusseau23,james23dpcpp}. A programação paralela é especialmente útil para tarefas que envolvem grandes volumes de dados ou cálculos complexos, onde a divisão do trabalho pode levar a melhorias significativas no desempenho.
+O objetivo da programação paralela é computar algo mais rapidamente. Um processo é dito paralelo quando uma tarefa é dividida em pequenas partes executadas simultaneamente com o intuito de acelerar a execução desta tarefa~\cite{ArpaciDusseau23,james23dpcpp}. A programação paralela é especialmente útil para tarefas que envolvem grandes volumes de dados ou cálculos complexos, onde a divisão do trabalho pode levar a melhorias significativas no desempenho.
 
 Concorrência descreve a gestão de múltiplas tarefas que progridem simultaneamente ao nível lógico; paralelismo refere-se à execução física simultânea de várias tarefas permitidas pela unidade de processamento. O número de \textit{threads} que pode ser escalonado de forma eficiente depende tanto do sistema operacional quanto da arquitetura de hardware. Exceder esses recursos faz com que as \textit{threads} concorram por CPU, memória e cache, aumentando trocas de contexto e, em muitos casos, degradando o desempenho~\cite{ArpaciDusseau23,stallings15computer}.
 
@@ -144,11 +145,11 @@ Será dada ênfase em \textit{data parallelism}, pois é o modelo mais adequado 
 
 \subsubsection{GPGPU}
 
-GPUs passaram a ser usadas para computação de propósito geral (GPGPU) em aplicações com algoritmos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizados de máquina. Embora GPUs entreguem alta transferência e processamento de dados, há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação.
+GPUs passaram a ser usadas para computação de propósito geral (general-purpose graphics processing unit, GPGPU) em aplicações com algoritmos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizados de máquina. Embora GPUs entreguem alta transferência e processamento de dados, há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação.
 
-Para ser possível produzir programas utilizando GPU, tanto o dispositivo deve suportar as operações presentes nas especificações modelo específico quanto o controlador do sistema operacional deve disponibilizar a API para que o desenvolvedor possar fazer uso~\cite{nickolls2008}.
+Para ser possível produzir programas utilizando GPU, tanto o dispositivo deve suportar as operações presentes nas especificações do modelo específico quanto o controlador do sistema operacional deve disponibilizar formas de acesso, por exemplo via API~\cite{nickolls2008}.
 
-O modelo mais utilizado para programação em GPU é o \textit{Single Instructions, Multiple Threads} (SIMT), um subconjunto do modelo SIMD utilizando múltiplas \textit{threads} do dispositivo para operar uma instrução única concorrentemente. Cada \textit{thread} é responsável por um subconjunto dos dados, permitindo que milhares de \textit{threads} sejam executadas em paralelo. A arquitetura SIMT é eficiente para operações que podem ser divididas em muitas tarefas independentes, como processamento de imagens, onde cada píxel pode ser processado separadamente~\cite{nickolls2008,stallings15computer}.
+O modelo mais utilizado para programação em GPU é o \textit{single instructions, multiple threads} (SIMT), um subconjunto do modelo SIMD utilizando múltiplas \textit{threads} do dispositivo para operar uma instrução única concorrentemente. Cada \textit{thread} é responsável por um subconjunto dos dados, permitindo que milhares de \textit{threads} sejam executadas em paralelo. A arquitetura SIMT é eficiente para operações que podem ser divididas em muitas tarefas independentes, como processamento de imagens, onde cada pixel pode ser processado separadamente~\cite{nickolls2008,stallings15computer}.
 
 \subsection{Tecnologias de programação paralela}
 
@@ -176,11 +177,11 @@ Neste exemplo, cada \textit{thread} calcula a soma de um único elemento dos vet
 
 \subsubsection{OpenCL}
 
-OpenCL (\textit{Open Computing Language}) é um padrão aberto e livre de \textit{royalties} mantido pelo Khronos Group para programação paralela heterogênea~\cite{stone2010opencl}. Lançado em 2009, OpenCL foi projetado para ser portável entre diferentes tipos de processadores, incluindo CPUs, GPUs, FPGAs e outros aceleradores, permitindo que o mesmo código seja executado em hardware de diferentes fabricantes~\cite{opencl2025}.
+OpenCL é um padrão aberto e livre de \textit{royalties} mantido pelo Khronos Group para programação paralela heterogênea~\cite{stone2010opencl}. Lançado em 2009, OpenCL foi projetado para ser portável entre diferentes tipos de processadores, incluindo CPUs, GPUs, FPGAs e outros aceleradores, permitindo que o mesmo código seja executado em hardware de diferentes fabricantes~\cite{opencl2025}.
 
 Diferentemente do CUDA, específico para GPUs NVIDIA, OpenCL adota uma abordagem agnóstica de plataforma. O modelo de programação OpenCL separa claramente o código do \textit{host} (CPU) do código do dispositivo (\textit{kernel}), compilado em tempo de execução. Isso proporciona flexibilidade, mas pode introduzir complexidade adicional no desenvolvimento~\cite{stone2010opencl}.
 
-O modelo de memória OpenCL define quatro regiões distintas: memória global, memória constante, memória local (equivalente à memória compartilhada do CUDA) e memória privada. O modelo de execução organiza \textit{work-items} (equivalente a \textit{threads} no CUDA) em \textit{work-groups} (equivalente a blocos)~\cite{opencl2025}.
+O modelo de memória OpenCL define quatro regiões distintas: memória global, memória constante, memória local (equivalente à memória compartilhada do CUDA) e memória privada. O modelo de execução organiza \textit{work items} (equivalente a \textit{threads} no CUDA) em \textit{work groups} (equivalente a blocos)~\cite{opencl2025}.
 
 Um exemplo equivalente de soma vetorial em OpenCL seria:
 \begin{lstlisting}[caption={Exemplo de soma vetorial em OpenCL.}, label={lst:opencl-vector-add}]
