@@ -2,6 +2,8 @@
 
 Nesta seção, serão apresentados os detalhes de implementação dos operadores de processamento de imagens em cada uma das tecnologias avaliadas. Cada subseção descreve as particularidades e desafios encontrados durante o desenvolvimento em cada tecnologia.
 
+Para SYCL com AdaptiveCPP e CUDA com Julia foram utilizadas estruturas de dados genéricas para armazenar os dados de entrada e saída ao invés de texturas por serem recursos experimentais não suportados por suas implementações.
+
 \subsection{Implementação dos operadores para SYCL}
 
 Para cada operador, foi criado um \textit{functor} para servir como \textit{kernel} de execução. O gerenciamento de memória foi realizado por meio de USM, que não abstraem a transferência de dados entre CPU e GPU. Para o desenvolvimento do \textit{kernel} para ser executado utilizamos a estrutura descrita na Listagem~\ref{lst:sycl-kernel-struct}.
