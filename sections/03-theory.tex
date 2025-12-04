@@ -4,7 +4,7 @@ Nesta seção, serão apresentados conceitos e ferramentas que foram utilizadas 
 
 \subsection{Processamento de imagens digitais}
 
-Nesta subseção, serão apresentados conceitos básicos sobre imagens digitais, operações pontuais e matriciais, operações lineares e não-lineares, operações ponto-a-ponto e de janela, e operações morfológicas. Esses conceitos são fundamentais para entender as técnicas e algoritmos utilizados no processamento de imagens.
+Nesta subseção, serão apresentados conceitos básicos sobre imagens digitais, operações ponto-a-ponto e matriciais, operações lineares e não-lineares, operações ponto-a-ponto e de janela, e operações morfológicas. Esses conceitos são fundamentais para entender as técnicas e algoritmos utilizados no processamento de imagens.
 
 \subsubsection{Imagens digitais}
 
@@ -12,12 +12,12 @@ Uma imagem digital é uma representação bidimensional de uma cena ou objeto, c
 
 Imagens armazenam informações visuais que podem ser processadas e analisadas por funções matemáticas por computadores para, por exemplo, melhorar a nitidez, extrair características ou preparar para análise posterior.
 
-Imagens com 2D podem ser representadas como uma matriz \(I\) de tamanho \(M \times N\), onde \(M\) é o número de linhas (altura) e \(N\) é o número de colunas (largura). Cada elemento \(I(i,j)\) da matriz representa o valor do pixel na posição \((i,j)\). Em imagens em escala de cinza, esse valor é um número entre 0 (preto) e 1 (branco). Em imagens coloridas, cada pixel pode ser representado por três ou quatro valores correspondentes aos canais RGB e RGBA, respectivamente~\cite{gonzalez17}.
+Imagens bidimensionais podem ser representadas como uma matriz \(I\) de tamanho \(M \times N\), onde \(M\) é o número de linhas (altura) e \(N\) é o número de colunas (largura). Cada elemento \(I(i,j)\) da matriz representa o valor do pixel na posição \((i,j)\). Em imagens em escala de cinza, esse valor é um número entre 0 (preto) e 1 (branco). Em imagens coloridas, cada pixel pode ser representado por três ou quatro valores correspondentes aos canais RGB e RGBA, respectivamente~\cite{gonzalez17}.
 
-\subsubsection{Operações pontuais e matriciais}
+\subsubsection{Operações ponto-a-ponto e matriciais}
 
-Uma operação é dita pontual quando processa os dados de cada pixel da imagem resultante sem depender de dados vizinhos, já uma operação é dita matricial quando processa os dados de cada pixel da imagem utilizando todo o escopo da imagem aplicando transformações lineares~\cite{gonzalez17}.
-\noindent O produto pontual das imagens (denotado pelo símbolo $\odot$ ou $\otimes$) é formado multiplicado os elementos homólogos (de mesmo índice):
+Uma operação é dita ponto-a-ponto quando processa os dados de cada pixel da imagem resultante sem depender de dados vizinhos, já uma operação é dita matricial quando processa os dados de cada pixel da imagem utilizando todo o escopo da imagem aplicando transformações lineares~\cite{gonzalez17}.
+\noindent O produto ponto-a-ponto das imagens (denotado pelo símbolo $\odot$ ou $\otimes$) é formado multiplicado os elementos homólogos (de mesmo índice):
 \[
 	\begin{bmatrix}
 		a_{11} & a_{12} \\
@@ -51,7 +51,7 @@ Uma operação é dita pontual quando processa os dados de cada pixel da imagem 
 	\end{bmatrix}
 \]
 
-Produto matricial é comumente utilizado em operações de transformação geométrica, como rotação, escala e translação de imagens que é um ponto de foco para computação gráfica~\cite{shirley15}. Logo, quando uma operação ser apresentada nesse trabalho será considerado exclusivamente uma operação pontual, a menos que seja explicitamente declarado como uma operação matricial.
+Produto matricial é comumente utilizado em operações de transformação geométrica, como rotação, escala e translação de imagens que é um ponto de foco para computação gráfica~\cite{shirley15}. Logo, quando uma operação ser apresentada nesse trabalho será considerado exclusivamente uma operação ponto-a-ponto, a menos que seja explicitamente declarado como uma operação matricial.
 
 \subsubsection{Operações lineares e não-lineares}
 
@@ -86,7 +86,7 @@ Um operador é dito de ponto-a-ponto quando altera cada pixel da própria imagem
 	I_{out}(i,j) = T(I_{in}(i,j)) = 1 - I_{in}(i,j)
 \end{equation}
 
-Um operador é dito de janela quando processa uma imagem considerando a vizinhança dos pixels. Um \textit{kernel} representado por uma matriz de pesos aplicada sobre a imagem original para produzir a imagem resultante. Com isso, cada pixel da imagem resultante depende dos valores dos pixels vizinhos na imagem original. Considerando uma máscara \(K\) de tamanho \(m \times n\), a operação de convolução é um exemplo de operador de janela, definida como:
+Um operador é dito de janela quando processa uma imagem considerando a vizinhança dos pixels. Um \textit{kernel} é representado por uma matriz de pesos aplicada sobre a imagem original para produzir a imagem resultante. Com isso, cada pixel da imagem resultante depende dos valores dos pixels vizinhos na imagem original. Considerando uma máscara \(K\) de tamanho \(m \times n\), a operação de convolução é um exemplo de operador de janela, definida como:
 \begin{equation}
 	\label{eq:convolution}
 	I_{out}(i,j) = \sum_{u=-\lfloor m/2 \rfloor}^{\lfloor m/2 \rfloor} \sum_{v=-\lfloor n/2 \rfloor}^{\lfloor n/2 \rfloor} K(u,v) \cdot I_{in}(i+u,j+v)
@@ -125,7 +125,7 @@ O sistema operacional gerencia a execução de processos e \textit{threads} medi
 
 Um processo é uma instância de um programa em execução com seu próprio espaço de endereçamento. \textit{Threads} são unidades de execução num processo que compartilham memória e recursos, o que facilita a comunicação, mas exige mecanismos de sincronização como travas e barreiras para evitar condições de corrida~\cite{ArpaciDusseau23}.
 
-Enquanto uma CPU contêm núcleos de processamento mais complexos que operam instruções sequencialmente, uma GPU tem uma arquitetura altamente paralelizável \textit{single instruction, multiple data} (SIMD) com até dezenas de milhares de núcleos de processamento mais simples~\cite{nickolls2008}. Um exemplo é demonstrado na \Cref{fig:gpu-cpu-comparation}, onde a área de silício dedicada ao processamento em uma GPU é significativamente maior do que em uma CPU, refletindo sua capacidade de paralelismo massivo~\cite{stallings15computer}.
+Enquanto uma CPU contêm núcleos de processamento mais complexos que operam instruções sequencialmente, uma GPU tem uma arquitetura altamente paralelizável \textit{single instruction, multiple data} (SIMD) com até dezenas de milhares de núcleos de processamento mais simples~\cite{nickolls2008}. Na \Cref{fig:gpu-cpu-comparation}, a área de silício dedicada ao processamento em uma GPU é significativamente maior do que em uma CPU, refletindo sua capacidade de paralelismo massivo~\cite{stallings15computer}.
 
 \begin{figure}[!htb]
 	\centering
@@ -145,7 +145,7 @@ Será dada ênfase em \textit{data parallelism}, pois é o modelo mais adequado 
 
 \subsubsection{GPGPU}
 
-GPUs passaram a ser usadas para computação de propósito geral (general-purpose graphics processing unit, GPGPU) em aplicações com algoritmos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizados de máquina. Embora GPUs entreguem alta transferência e processamento de dados, há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação.
+GPUs passaram a ser usadas para computação de propósito geral (general-purpose graphics processing unit, GPGPU) em aplicações com algoritmos altamente paralelizáveis~\cite{stallings15computer,james23dpcpp}, como processamento de imagens e aprendizado de máquina. Embora GPUs entreguem alta transferência e processamento de dados, há custos associados: latência de transferência de dados entre CPU e GPU, custos de gerenciamento e aumento de complexidade de programação.
 
 Para ser possível produzir programas utilizando GPU, tanto o dispositivo deve suportar as operações presentes nas especificações do modelo específico quanto o controlador do sistema operacional deve disponibilizar formas de acesso, por exemplo via API~\cite{nickolls2008}.
 
@@ -227,7 +227,7 @@ q.submit([&](handler &h) {
 
 Neste exemplo, os \textit{buffers} encapsulam os dados e os \textit{accessors} declaram como cada \textit{kernel} acessa a memória. O método \texttt{parallel\_for} expressa o paralelismo de dados, e uma expressão lambda define o corpo do \textit{kernel}.
 
-Também é suportado uso de \textit{Unified Shared Memory} (USM) para acesso direto à memória compartilhada entre host e dispositivo utilizando a sintaxe de ponteiros com gerenciamento manual de memória~\cite{james23dpcpp}.
+Também é suportado uso de \textit{unified shared memory} (USM) para acesso direto à memória compartilhada entre host e dispositivo utilizando a sintaxe de ponteiros com gerenciamento manual de memória~\cite{james23dpcpp}.
 
 Exemplo de soma vetorial em SYCL com USM:
 

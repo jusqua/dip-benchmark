@@ -15,7 +15,7 @@ A metodologia adotada será baseada nos experimentos \cite{Dantas2015opencl,Dant
 
 Desenvolveremos os operadores de processamento de imagens conforme descritos nas \Crefrange{eq:grayscale}{eq:dilation} para as tecnologias cujo desempenho iremos analisar.
 
-A foi feito um \textit{fork} da biblioteca VisionGL\footnote{\url{https://github.com/ddantas/visiongl}} para estudo da estrutura do projeto e desenvolvimento dos operadores lógicos em outras tecnologias. O \textit{fork} está num repositório do GitHub\footnote{\url{https://github.com/jusqua/visiongl}}.
+Foi criado um \textit{fork} da biblioteca VisionGL\footnote{\url{https://github.com/ddantas/visiongl}} para estudo da estrutura do projeto e desenvolvimento dos operadores lógicos em outras tecnologias. O \textit{fork} está num repositório do GitHub\footnote{\url{https://github.com/jusqua/visiongl}}.
 
 \subsection{Recursos Utilizados}
 
@@ -50,7 +50,7 @@ As especificações do ambiente de trabalho utilizado no momento da realização
 
 \subsection{Estrutura do Benchmark}
 
-A imagem de teste utilizada nos experimentos é a mostrada na \Cref{fig:fundus} com dimensões de 3504 $\times$ 2336 pixels e 3 canais de cor. A imagem foi escolhida por conter por ser grande o suficiente para ter um atraso significativo no processamento.
+A imagem de teste utilizada nos experimentos é a mostrada na \Cref{fig:fundus} com dimensões de 3504 $\times$ 2336 pixels e 3 canais de cor. A imagem foi escolhida por ser grande o suficiente para ter um atraso significativo no processamento.
 
 \begin{figure}[!htb]
 	\centering
@@ -77,7 +77,7 @@ Para o operador de erosão~\ref{eq:erosion} utilizamos elementos estruturantes d
         $\begin{bmatrix}
             1 & 1 & 1
         \end{bmatrix}
-        \cross
+        \circ
         \begin{bmatrix}
             1 \\
             1 \\
